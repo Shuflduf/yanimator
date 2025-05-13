@@ -1,34 +1,43 @@
 use eframe::egui;
 use egui::{epaint, vec2, Color32, ColorImage, TextureHandle};
 use palette_parser::Palette;
+use sprite_parser::{Sprite, Spritesheet};
 
 mod palette_parser;
+mod sprite_parser;
 
 fn main() -> eframe::Result {
-    let palette = Palette::from_pal("night_walk.pal").unwrap();
-
-    for pal in palette.colors.iter() {
-        println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
-    }
-
     let native_options = eframe::NativeOptions::default();
     eframe::run_native("Yanimator", native_options, Box::new(|cc| Ok(Box::new(Yanimator::new(cc)))))
 }
 
 struct Yanimator {
-    test: TextureHandle
+    test: TextureHandle,
+    sprite_id: u8,
+    palette: Palette,
+    spritesheet: Spritesheet
 }
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let palette = Palette::from_pal("night_walk.pal").unwrap();
+
+        for pal in palette.colors.iter() {
+            println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
+        }
+
+        let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
+
+        let sprite = &spritesheet.sprites[0x0];
+
         let mut pixels: Vec<u8> = Vec::new();
 
-        for y in 0..8 {
-            for x in 0..8 {
-                pixels.push(x * 15);
-                pixels.push(y * 15);
-                pixels.push(x * 15);
-            }
+        for i in 0..0x40 {
+            let palette_id = sprite.pixels[i];
+            let rgb = &palette.colors[palette_id as usize];
+            pixels.push(rgb.r);
+            pixels.push(rgb.b);
+            pixels.push(rgb.g);
         }
 
         Self {
@@ -40,7 +49,9 @@ impl Yanimator {
                     minification: egui::TextureFilter::Nearest,
                     wrap_mode: egui::TextureWrapMode::Repeat,
                     mipmap_mode: None,
-                })
+                }),
+            sprite_id: 0,
+            spritesheet, palette
         }
     }
 }
@@ -52,6 +63,29 @@ impl eframe::App for Yanimator {
             ui.add(egui::Image::new(
                 &self.test).fit_to_exact_size(vec2(200.0, 200.0))
             );
+            ui.add(egui::DragValue::new(&mut self.sprite_id).speed(0.1).range(0..=0xff));
         });
+
+        let sprite = &self.spritesheet.sprites[self.sprite_id as usize];
+
+        let mut pixels: Vec<u8> = Vec::new();
+
+        for i in 0..0x40 {
+            let palette_id = sprite.pixels[i];
+            let rgb = &self.palette.colors[palette_id as usize];
+            pixels.push(rgb.r);
+            pixels.push(rgb.g);
+            pixels.push(rgb.b);
+        }
+
+        self.test = ctx.load_texture(
+            "test",
+            ColorImage::from_rgb([8, 8], &pixels), 
+            egui::TextureOptions {
+                magnification: egui::TextureFilter::Nearest,
+                minification: egui::TextureFilter::Nearest,
+                wrap_mode: egui::TextureWrapMode::Repeat,
+                mipmap_mode: None,
+            });
     }
 }

@@ -19,7 +19,7 @@ impl Palette {
 
         let bytes = fs::read(file_path)?;
         
-        for i in 0x0..0xF {
+        for i in 0x0..0x10 {
             let r = bytes[0x18 + i * 4];
             let g = bytes[0x19 + i * 4];
             let b = bytes[0x1a + i * 4];
