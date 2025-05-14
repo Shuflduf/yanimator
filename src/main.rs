@@ -5,6 +5,7 @@ use sprite_parser::{Sprite, Spritesheet};
 
 mod palette_parser;
 mod sprite_parser;
+mod anim_parser;
 
 fn main() -> eframe::Result {
     let native_options = eframe::NativeOptions::default();
@@ -12,8 +13,8 @@ fn main() -> eframe::Result {
 }
 
 struct Yanimator {
-    test: TextureHandle,
-    sprite_id: u8,
+    textures: Vec<TextureHandle>,
+    sprite_id: u16,
     palette: Palette,
     spritesheet: Spritesheet
 }
@@ -27,29 +28,35 @@ impl Yanimator {
         }
 
         let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
-
-        let sprite = &spritesheet.sprites[0x0];
-
-        let mut pixels: Vec<u8> = Vec::new();
-
-        for i in 0..0x40 {
-            let palette_id = sprite.pixels[i];
-            let rgb = &palette.colors[palette_id as usize];
-            pixels.push(rgb.r);
-            pixels.push(rgb.b);
-            pixels.push(rgb.g);
-        }
-
-        Self {
-            test: cc.egui_ctx.load_texture(
-                "test",
+        let mut textures: Vec<TextureHandle> =  Vec::new();
+        
+        for i in 0..spritesheet.sprites.len() {
+            let sprite = &spritesheet.sprites[i];
+            let mut pixels: Vec<u8> = Vec::new();
+        
+            for i in 0..0x40 {
+                let palette_id = sprite.pixels[i];
+                let rgb = &palette.colors[palette_id as usize];
+                pixels.push(rgb.r);
+                pixels.push(rgb.g);
+                pixels.push(rgb.b);
+            }
+            
+            textures.push(
+                cc.egui_ctx.load_texture(
+                i.to_string(),
                 ColorImage::from_rgb([8, 8], &pixels), 
                 egui::TextureOptions {
                     magnification: egui::TextureFilter::Nearest,
                     minification: egui::TextureFilter::Nearest,
                     wrap_mode: egui::TextureWrapMode::Repeat,
                     mipmap_mode: None,
-                }),
+                })
+            )
+        }
+
+        Self {
+            textures,
             sprite_id: 0,
             spritesheet, palette
         }
@@ -58,34 +65,26 @@ impl Yanimator {
 
 impl eframe::App for Yanimator {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        ctx.set_debug_on_hover(true);
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Hello World!");
-            ui.add(egui::Image::new(
-                &self.test).fit_to_exact_size(vec2(200.0, 200.0))
-            );
-            ui.add(egui::DragValue::new(&mut self.sprite_id).speed(0.1).range(0..=0xff));
-        });
+            
+            egui::Grid::new("spritesheet_grid").spacing(vec2(-10.0,0.0)).show(ui, |ui| {
+                for i in 0..self.textures.len() {
+                    ui.add(egui::Image::new(
+                        &self.textures[i]).fit_to_exact_size(vec2(30.0, 30.0))
+                    );
 
-        let sprite = &self.spritesheet.sprites[self.sprite_id as usize];
-
-        let mut pixels: Vec<u8> = Vec::new();
-
-        for i in 0..0x40 {
-            let palette_id = sprite.pixels[i];
-            let rgb = &self.palette.colors[palette_id as usize];
-            pixels.push(rgb.r);
-            pixels.push(rgb.g);
-            pixels.push(rgb.b);
-        }
-
-        self.test = ctx.load_texture(
-            "test",
-            ColorImage::from_rgb([8, 8], &pixels), 
-            egui::TextureOptions {
-                magnification: egui::TextureFilter::Nearest,
-                minification: egui::TextureFilter::Nearest,
-                wrap_mode: egui::TextureWrapMode::Repeat,
-                mipmap_mode: None,
+                    if (i + 1) % 16 == 0 {
+                        ui.end_row();
+                    }
+                }
             });
+            
+            //ui.add(egui::Image::new(
+            //    &self.textures[self.sprite_id as usize]).fit_to_exact_size(vec2(200.0, 200.0))
+            //);
+            //ui.add(egui::DragValue::new(&mut self.sprite_id).speed(0.1).range(0..=self.spritesheet.sprites.len() - 1));
+        });
     }
 }
