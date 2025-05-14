@@ -27,7 +27,7 @@ impl Yanimator {
             println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
         }
 
-        let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
+        let spritesheet = Spritesheet::from_4bpp("tap_trial_obj.4bpp").unwrap();
         let mut textures: Vec<TextureHandle> =  Vec::new();
         
         for i in 0..spritesheet.sprites.len() {
@@ -69,16 +69,42 @@ impl eframe::App for Yanimator {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Hello World!");
             
-            egui::Grid::new("spritesheet_grid").spacing(vec2(-10.0,0.0)).show(ui, |ui| {
-                for i in 0..self.textures.len() {
+            egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
+                let mut i = 0;
+                //let mut alternate = true;
+                while i < self.textures.len() {
                     ui.add(egui::Image::new(
-                        &self.textures[i]).fit_to_exact_size(vec2(30.0, 30.0))
+                        &self.textures[i]).fit_to_exact_size(vec2(20.0, 20.0))
                     );
 
                     if (i + 1) % 16 == 0 {
                         ui.end_row();
+
+                        //if alternate {
+                        //    i += 16;
+                        //}
                     }
+
+                    i += 1;
                 }
+
+                /*i = 15;
+
+                while i < self.textures.len() {
+                    ui.add(egui::Image::new(
+                        &self.textures[i]).fit_to_exact_size(vec2(20.0, 20.0))
+                    );
+
+                    if (i + 1) % 16 == 0 {
+                        ui.end_row();
+
+                        if alternate {
+                            i += 16;
+                        }
+                    }
+
+                    i += 1;
+                }*/
             });
             
             //ui.add(egui::Image::new(

@@ -33,12 +33,34 @@ impl Spritesheet {
     pub fn from_4bpp(file_path: &str) -> Result<Spritesheet, std::io::Error> {
         let bytes = fs::read(file_path)?;
         let mut sprites: Vec<Sprite> = Vec::new();
-        println!("{}", bytes.len() / 0x20);
-        // todo: load more
-        for i in 0..bytes.len() / 0x20 {
+        //println!("{}", bytes.len() / 0x20);
+        let mut i = 0;
+
+        while i < bytes.len() / 0x20 {
             let sprite = Sprite::from_4bpp(&bytes[(i * 0x20)..(i * 0x20) + 0x20]);
             sprites.push(sprite);
+            i += 1;
+
+            if i % 16 == 0 {
+                i += 16;
+            }
         }
+
+        i = 16;
+
+        while i < bytes.len() / 0x20 {
+            let sprite = Sprite::from_4bpp(&bytes[(i * 0x20)..(i * 0x20) + 0x20]);
+            sprites.push(sprite);
+            i += 1;
+
+            if i % 16 == 0 {
+                i += 16;
+            }
+        }
+
+        //for i in 0..bytes.len() / 0x20 {
+            
+        //}
 
         
 
