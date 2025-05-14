@@ -2,6 +2,7 @@ use eframe::egui;
 use egui::{epaint, vec2, Color32, ColorImage, TextureHandle};
 use palette_parser::Palette;
 use sprite_parser::{Sprite, Spritesheet};
+use anim_parser::OAM;
 
 mod palette_parser;
 mod sprite_parser;
@@ -14,7 +15,7 @@ fn main() -> eframe::Result {
 
 struct Yanimator {
     textures: Vec<TextureHandle>,
-    sprite_id: u16,
+    sprite_id: usize,
     palette: Palette,
     spritesheet: Spritesheet
 }
@@ -27,7 +28,7 @@ impl Yanimator {
             println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
         }
 
-        let spritesheet = Spritesheet::from_4bpp("tap_trial_obj.4bpp").unwrap();
+        let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
         let mut textures: Vec<TextureHandle> =  Vec::new();
         
         for i in 0..spritesheet.sprites.len() {
@@ -55,6 +56,12 @@ impl Yanimator {
             )
         }
 
+        let test_oam = OAM::new(&vec![0x00, 0xe8, 0x41, 0xf8, 0x20, 0x9c]);
+        println!("{:?}", test_oam);
+
+        let test_oam2 = OAM::new(&vec![0x40, 0xf8, 0x01, 0xf8, 0x21, 0x52]);
+        println!("{:?}", test_oam2);
+
         Self {
             textures,
             sprite_id: 0,
@@ -67,50 +74,27 @@ impl eframe::App for Yanimator {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         ctx.set_debug_on_hover(true);
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Hello World!");
+            ui.heading(format!("{}", self.sprite_id));
             
             egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
                 let mut i = 0;
                 //let mut alternate = true;
                 while i < self.textures.len() {
-                    ui.add(egui::Image::new(
+                    let sprite = ui.add(egui::Image::new(
                         &self.textures[i]).fit_to_exact_size(vec2(20.0, 20.0))
                     );
 
+                    if sprite.hovered() {
+                        self.sprite_id = i;
+                    }
+
                     if (i + 1) % 16 == 0 {
                         ui.end_row();
-
-                        //if alternate {
-                        //    i += 16;
-                        //}
                     }
 
                     i += 1;
                 }
-
-                /*i = 15;
-
-                while i < self.textures.len() {
-                    ui.add(egui::Image::new(
-                        &self.textures[i]).fit_to_exact_size(vec2(20.0, 20.0))
-                    );
-
-                    if (i + 1) % 16 == 0 {
-                        ui.end_row();
-
-                        if alternate {
-                            i += 16;
-                        }
-                    }
-
-                    i += 1;
-                }*/
             });
-            
-            //ui.add(egui::Image::new(
-            //    &self.textures[self.sprite_id as usize]).fit_to_exact_size(vec2(200.0, 200.0))
-            //);
-            //ui.add(egui::DragValue::new(&mut self.sprite_id).speed(0.1).range(0..=self.spritesheet.sprites.len() - 1));
         });
     }
 }

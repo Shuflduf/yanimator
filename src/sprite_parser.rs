@@ -41,12 +41,12 @@ impl Spritesheet {
             sprites.push(sprite);
             i += 1;
 
-            if i % 16 == 0 {
-                i += 16;
-            }
+           // if i % 16 == 0 {
+            //    i += 16;
+            //}
         }
 
-        i = 16;
+        /*i = 16;
 
         while i < bytes.len() / 0x20 {
             let sprite = Sprite::from_4bpp(&bytes[(i * 0x20)..(i * 0x20) + 0x20]);
@@ -56,7 +56,7 @@ impl Spritesheet {
             if i % 16 == 0 {
                 i += 16;
             }
-        }
+        }*/
 
         //for i in 0..bytes.len() / 0x20 {
             

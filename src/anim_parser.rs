@@ -1,16 +1,17 @@
+#[derive(Debug)]
 pub enum OAMShape {
     Square,
     Horizontal,
     Vertical
 }
-
+#[derive(Debug)]
 pub enum OAMSize {
     Size8,
     Size16,
     Size32,
     Size64
 }
-
+#[derive(Debug)]
 pub enum OAMFlip {
     None,
     Horizontal,
@@ -18,6 +19,7 @@ pub enum OAMFlip {
     Both
 }
 
+#[derive(Debug)]
 pub struct OAM {
     shape: OAMShape,
     size: OAMSize,
