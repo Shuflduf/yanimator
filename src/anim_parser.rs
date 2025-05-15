@@ -1,4 +1,4 @@
-use egui::{pos2, vec2, Pos2, TextureHandle, Ui};
+use egui::{pos2, vec2, Pos2, Rect, TextureHandle, Ui};
 
 use crate::Yanimator;
 
@@ -119,10 +119,27 @@ impl OAM {
             }
         }
         
-        for y in 0..height {
+        let mut y_range: Vec<usize> = (0..height).collect();
+        let mut x_range: Vec<usize> = (0..width).collect();
+        
+        match self.flip {
+            OAMFlip::Horizontal => {
+                x_range = (0..width).rev().collect();
+            },
+            OAMFlip::Vertical => {
+                y_range = (0..height).rev().collect();
+            },
+            OAMFlip::Both => {
+                x_range = (0..width).rev().collect();
+                y_range = (0..height).rev().collect();
+            },
+            OAMFlip::None => {}
+        }
+
+        for y in y_range {
             let mut row: Vec<usize> = Vec::new();
             
-            for x in 0..width {
+            for &x in &x_range {
                 row.push(self.tile as usize + x + y * 32);
             }
 
@@ -147,8 +164,23 @@ impl OAM {
                 );
                 
                 ui.put(rect, |ui: &mut Ui| {
-                    ui.add(egui::Image::new(
-                        &textures[oam_sprites[y][x]]).fit_to_exact_size(vec2(sprite_size, sprite_size))
+                    let mut texture = egui::Image::new(&textures[oam_sprites[y][x]]);
+                    
+                    match self.flip { 
+                        OAMFlip::Horizontal => {
+                            texture = texture.uv(Rect::from_min_max(pos2(1.0, 0.0), pos2(0.0, 1.0)));
+                        },
+                        OAMFlip::Vertical => {
+                            texture = texture.uv(Rect::from_min_max(pos2(0.0, 1.0), pos2(1.0, 0.0)));
+                        },
+                        OAMFlip::Both => {
+                            texture = texture.uv(Rect::from_min_max(pos2(1.0, 1.0), pos2(1.0, 1.0)));
+                        },
+                        _ => {}
+                    }
+
+                    ui.add(
+                        texture.fit_to_exact_size(vec2(sprite_size, sprite_size))
                     )
                 });
 
@@ -223,7 +255,7 @@ impl AnimationCel {
     }
 
     pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, size: f32, ui: &mut Ui) {
-        for oam in &self.oams {
+        for oam in self.oams.iter().rev() {
             oam.draw(textures, offset, size, ui);
         }
     }

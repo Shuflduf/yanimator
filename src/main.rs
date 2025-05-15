@@ -38,7 +38,7 @@ impl Yanimator {
 
 
         // Load Spritesheet and create TextureHandles
-        let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
+        let spritesheet = Spritesheet::from_4bpp("clappy_trio_obj.4bpp").unwrap();
         let mut textures: Vec<TextureHandle> =  Vec::new();
         
         for i in 0..spritesheet.sprites.len() {
@@ -77,10 +77,9 @@ impl Yanimator {
         }
         
         // Load AnimationCels
-
-        //let animation_cels;
+        
         let test_cels_file = fs::read_to_string("night_walk_anim_cels.c").unwrap();
-
+        
         let mut cel_positions = Vec::new();
         let mut i = 0;
 
