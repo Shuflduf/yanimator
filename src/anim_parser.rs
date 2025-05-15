@@ -1,3 +1,7 @@
+use egui::{pos2, vec2, Ui};
+
+use crate::Yanimator;
+
 #[derive(Debug)]
 pub enum OAMShape {
     Square,
@@ -91,8 +95,8 @@ impl OAM {
     pub fn get_sprite_indexes(&self) -> Vec<Vec<usize>> {
         let mut sprite_indexes: Vec<Vec<usize>> = Vec::new();
         
-        let mut width: usize;
-        let mut height: usize;
+        let width: usize;
+        let height: usize;
         
         match self.shape {
             OAMShape::Square => match self.size {
@@ -126,5 +130,106 @@ impl OAM {
         }
         
         return sprite_indexes;
+    }
+
+    pub fn draw(&self, app: &mut Yanimator, ui: &mut Ui) {
+        let oam_sprites = self.get_sprite_indexes();
+            
+        let sprite_size = 20.0;
+
+        for y in 0..oam_sprites.len() {
+            for x in 0..oam_sprites[y].len() {
+                let rect = egui::Rect::from_min_size(
+                    pos2(
+                        (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0 + app.offset.x, 
+                        (y as f32) * sprite_size + (self.y as f32) * sprite_size / 8.0 + app.offset.y),
+                    vec2(sprite_size, sprite_size)
+                );
+                
+                ui.put(rect, |ui: &mut Ui| {
+                    ui.add(egui::Image::new(
+                        &app.textures[oam_sprites[y][x]]).fit_to_exact_size(vec2(sprite_size, sprite_size))
+                    )
+                });
+
+                ui.allocate_space(vec2(sprite_size, sprite_size));
+            }
+        }
+    }
+}
+
+pub struct AnimationCel {
+    oams: Vec<OAM>
+}
+
+fn parse_hex_string(string: &str) -> Option<u8> {
+    match u8::from_str_radix(&string, 16) {
+        Ok(value) => Some(value),
+        Err(_) => None
+    }
+}
+
+impl AnimationCel {
+    pub fn from_c(c: &str) -> Option<AnimationCel> {
+        
+        //
+
+        let length_start = c.find("/* Len */ ")? + 10;
+        let mut length_str: String = String::from("");
+        let length: usize;
+
+        for i in length_start..length_start + 3 {
+            if c.chars().nth(i) != Some(',') {
+                length_str.push(c.chars().nth(i).unwrap());
+            } else {
+                break;
+            }
+        }
+
+        length = match length_str.parse() {
+            Ok(value) => value,
+            Err(_) => return None,
+        };
+
+        println!("{}", length);
+
+        let mut oam_positions = Vec::new();
+        let mut i = length_start + 2;
+
+        while let Some(pos) = c[i..].find("*/ ") {
+            oam_positions.push(i + pos);
+            i += pos + 4;
+        }
+
+        let mut oams: Vec<OAM> = Vec::new();
+
+        for pos in oam_positions.into_iter() {
+            let mut bytes: Vec<u8> = Vec::new();
+            
+            let byte1 = parse_hex_string(&c[pos+5..pos+7])?;
+            let byte2 = parse_hex_string(&c[pos+7..pos+9])?;
+            let byte3 = parse_hex_string(&c[pos+13..pos+15])?;
+            let byte4 = parse_hex_string(&c[pos+15..pos+17])?;
+            let byte5 = parse_hex_string(&c[pos+21..pos+23])?;
+            let byte6 = parse_hex_string(&c[pos+23..pos+25])?;
+            
+            bytes.push(byte1);
+            bytes.push(byte2);
+            bytes.push(byte3);
+            bytes.push(byte4);
+            bytes.push(byte5);
+            bytes.push(byte6);
+
+            let oam = OAM::new(&bytes);
+            oams.push(oam);
+        }
+
+        Some(AnimationCel { oams })
+    }
+
+    pub fn draw(&self, app: &mut Yanimator, ui: &mut Ui) {
+        for oam in self.oams.iter() {
+            oam.draw(app, ui);
+        }
     }
 }
