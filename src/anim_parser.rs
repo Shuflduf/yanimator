@@ -24,8 +24,8 @@ pub struct OAM {
     shape: OAMShape,
     size: OAMSize,
     flip: OAMFlip,
-    x: i16,
-    y: i16,
+    pub x: i16,
+    pub y: i16,
     palette: u16,
     tile: u16
 }
