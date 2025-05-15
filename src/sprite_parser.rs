@@ -35,7 +35,7 @@ impl Spritesheet {
         let mut sprites: Vec<Sprite> = Vec::new();
         //println!("{}", bytes.len() / 0x20);
         let mut i = 0;
-
+        
         while i < bytes.len() / 0x20 {
             let sprite = Sprite::from_4bpp(&bytes[(i * 0x20)..(i * 0x20) + 0x20]);
             sprites.push(sprite);

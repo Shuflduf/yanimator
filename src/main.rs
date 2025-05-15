@@ -55,9 +55,10 @@ impl Yanimator {
                 })
             )
         }
-
+        
         let test_oam = OAM::new(&vec![0x00, 0xe8, 0x41, 0xf8, 0x20, 0x9c]);
         println!("{:?}", test_oam);
+
 
         let test_oam2 = OAM::new(&vec![0x40, 0xf8, 0x01, 0xf8, 0x21, 0x52]);
         println!("{:?}", test_oam2);
@@ -88,7 +89,7 @@ impl eframe::App for Yanimator {
                         self.sprite_id = i;
                     }
 
-                    if (i + 1) % 16 == 0 {
+                    if (i + 1) % 32 == 0 {
                         ui.end_row();
                     }
 
