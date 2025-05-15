@@ -132,10 +132,10 @@ impl OAM {
         return sprite_indexes;
     }
 
-    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, size: f32, ui: &mut Ui) {
         let oam_sprites = self.get_sprite_indexes();
             
-        let sprite_size = 20.0;
+        let sprite_size = size;
 
         for y in 0..oam_sprites.len() {
             for x in 0..oam_sprites[y].len() {
@@ -222,9 +222,9 @@ impl AnimationCel {
         Some(AnimationCel { oams })
     }
 
-    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, size: f32, ui: &mut Ui) {
         for oam in &self.oams {
-            oam.draw(textures, offset, ui);
+            oam.draw(textures, offset, size, ui);
         }
     }
 }

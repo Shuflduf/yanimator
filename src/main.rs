@@ -23,6 +23,7 @@ struct Yanimator {
     palette: Palette,
     spritesheet: Spritesheet,
     offset: Pos2,
+    zoom: f32,
     animation_cels: Vec<AnimationCel>
 }
 
@@ -112,6 +113,7 @@ impl Yanimator {
             spritesheet, 
             palette, 
             offset: pos2(0.0, 0.0),
+            zoom: 20.0,
             animation_cels
         }
     }
@@ -131,7 +133,13 @@ impl eframe::App for Yanimator {
                             self.offset += pos;
                         }
                     })
-                    
+                }
+                egui::Event::MouseWheel { unit, delta, modifiers } => {
+                    self.zoom += delta.y;
+
+                    if self.zoom <= 1.0 {
+                        self.zoom = 1.0;
+                    }
                 }
                 _ => {}
             }
@@ -158,7 +166,7 @@ impl eframe::App for Yanimator {
             //let test_cel = ;
             //if let Some(cel) = test_cel {
                 if let Some(animation_cel) = self.animation_cels.get(self.sprite_id) {
-                    animation_cel.draw(&self.textures, self.offset, ui);
+                    animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
                 }
             //}
 
