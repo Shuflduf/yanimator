@@ -1,8 +1,12 @@
+use std::fs;
+
 use eframe::egui;
 use egui::{epaint, pos2, vec2, Color32, ColorImage, Pos2, Rect, TextureHandle, Ui};
 use palette_parser::Palette;
 use sprite_parser::{Sprite, Spritesheet};
 use anim_parser::{AnimationCel, OAM};
+
+use rayon::prelude::*;
 
 mod palette_parser;
 mod sprite_parser;
@@ -18,17 +22,21 @@ struct Yanimator {
     sprite_id: usize,
     palette: Palette,
     spritesheet: Spritesheet,
-    offset: Pos2
+    offset: Pos2,
+    animation_cels: Vec<AnimationCel>
 }
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Load Palette
         let palette = Palette::from_pal("night_walk.pal").unwrap();
 
         for pal in palette.colors.iter() {
             println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
         }
 
+
+        // Load Spritesheet and create TextureHandles
         let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
         let mut textures: Vec<TextureHandle> =  Vec::new();
         
@@ -67,13 +75,44 @@ impl Yanimator {
             )
         }
         
+        // Load AnimationCels
+
+        //let animation_cels;
+        let test_cels_file = fs::read_to_string("night_walk_anim_cels.c").unwrap();
+
+        let mut cel_positions = Vec::new();
+        let mut i = 0;
+
+        while let Some(pos) = test_cels_file[i..].find("[] = {") {
+            cel_positions.push(i + pos);
+            i += pos + 7;
+        }
+
+        let animation_cels = cel_positions
+            .par_iter()
+            .filter_map(|&start| {
+                let mut cel_str = String::new();
+
+                for i in start..test_cels_file.len() {
+                    if test_cels_file.chars().nth(i) != Some(';') {
+                        cel_str.push(test_cels_file.chars().nth(i).unwrap());
+                    } else {
+                        break;
+                    }
+                }
+
+                AnimationCel::from_c(&cel_str)
+            })
+            .collect();
+        
         
         Self {
             textures,
             sprite_id: 0,
             spritesheet, 
             palette, 
-            offset: pos2(0.0, 0.0)
+            offset: pos2(0.0, 0.0),
+            animation_cels
         }
     }
 }
@@ -100,8 +139,8 @@ impl eframe::App for Yanimator {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading(format!("{}", self.sprite_id));
-            
-            let test_cel = AnimationCel::from_c(
+            ui.add(egui::DragValue::new(&mut self.sprite_id).speed(0.1).range(0..=self.animation_cels.len()));
+            /*let test_cel = AnimationCel::from_c(
                 "
                 
                 AnimationCel night_walk_cel033[] = {
@@ -115,11 +154,15 @@ impl eframe::App for Yanimator {
     /* 006 */ 0x4000, 0x4004, 0x012f
 };
                 
-                ");
+                ");*/
+            //let test_cel = ;
+            //if let Some(cel) = test_cel {
+                if let Some(animation_cel) = self.animation_cels.get(self.sprite_id) {
+                    animation_cel.draw(&self.textures, self.offset, ui);
+                }
+            //}
 
-            if let Some(cel) = test_cel {
-                cel.draw(self, ui);
-            }
+            
 
             //let test_oam = OAM::new(&vec![0x00, 0xe8, 0x41, 0xf8, 0x20, 0xd4]);
             //let test_oam2 = OAM::new(&vec![0x40, 0xf8, 0x01, 0xf8, 0x21, 0x48]);

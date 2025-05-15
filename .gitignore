@@ -1,3 +1,4 @@
 /target
 *.4bpp
 *.pal
+*.c

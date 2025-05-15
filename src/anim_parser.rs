@@ -1,4 +1,4 @@
-use egui::{pos2, vec2, Ui};
+use egui::{pos2, vec2, Pos2, TextureHandle, Ui};
 
 use crate::Yanimator;
 
@@ -132,7 +132,7 @@ impl OAM {
         return sprite_indexes;
     }
 
-    pub fn draw(&self, app: &mut Yanimator, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, ui: &mut Ui) {
         let oam_sprites = self.get_sprite_indexes();
             
         let sprite_size = 20.0;
@@ -141,14 +141,14 @@ impl OAM {
             for x in 0..oam_sprites[y].len() {
                 let rect = egui::Rect::from_min_size(
                     pos2(
-                        (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0 + app.offset.x, 
-                        (y as f32) * sprite_size + (self.y as f32) * sprite_size / 8.0 + app.offset.y),
+                        (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0 + offset.x, 
+                        (y as f32) * sprite_size + (self.y as f32) * sprite_size / 8.0 + offset.y),
                     vec2(sprite_size, sprite_size)
                 );
                 
                 ui.put(rect, |ui: &mut Ui| {
                     ui.add(egui::Image::new(
-                        &app.textures[oam_sprites[y][x]]).fit_to_exact_size(vec2(sprite_size, sprite_size))
+                        &textures[oam_sprites[y][x]]).fit_to_exact_size(vec2(sprite_size, sprite_size))
                     )
                 });
 
@@ -171,9 +171,6 @@ fn parse_hex_string(string: &str) -> Option<u8> {
 
 impl AnimationCel {
     pub fn from_c(c: &str) -> Option<AnimationCel> {
-        
-        //
-
         let length_start = c.find("/* Len */ ")? + 10;
         let mut length_str: String = String::from("");
         let length: usize;
@@ -190,8 +187,6 @@ impl AnimationCel {
             Ok(value) => value,
             Err(_) => return None,
         };
-
-        println!("{}", length);
 
         let mut oam_positions = Vec::new();
         let mut i = length_start + 2;
@@ -227,9 +222,9 @@ impl AnimationCel {
         Some(AnimationCel { oams })
     }
 
-    pub fn draw(&self, app: &mut Yanimator, ui: &mut Ui) {
-        for oam in self.oams.iter() {
-            oam.draw(app, ui);
+    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, ui: &mut Ui) {
+        for oam in &self.oams {
+            oam.draw(textures, offset, ui);
         }
     }
 }
