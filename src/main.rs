@@ -38,16 +38,26 @@ impl Yanimator {
         
             for i in 0..0x40 {
                 let palette_id = sprite.pixels[i];
-                let rgb = &palette.colors[palette_id as usize];
-                pixels.push(rgb.r);
-                pixels.push(rgb.g);
-                pixels.push(rgb.b);
+                
+                if palette_id == 0 {
+                    pixels.push(0);
+                    pixels.push(0);
+                    pixels.push(0);
+                    pixels.push(0);
+                } else {
+                    let rgb = &palette.colors[palette_id as usize];
+                    pixels.push(rgb.r);
+                    pixels.push(rgb.g);
+                    pixels.push(rgb.b);
+                    pixels.push(255);
+                }
+                
             }
             
             textures.push(
                 cc.egui_ctx.load_texture(
                 i.to_string(),
-                ColorImage::from_rgb([8, 8], &pixels), 
+                ColorImage::from_rgba_unmultiplied([8, 8], &pixels), 
                 egui::TextureOptions {
                     magnification: egui::TextureFilter::Nearest,
                     minification: egui::TextureFilter::Nearest,
@@ -94,29 +104,15 @@ impl eframe::App for Yanimator {
             let test_cel = AnimationCel::from_c(
                 "
                 
-                AnimationCel night_walk_cel088[] = {
-    /* Len */ 21,
-    /* 000 */ 0x4000, 0x41bc, 0x010b,
-    /* 001 */ 0x8009, 0x41bc, 0x0014,
-    /* 002 */ 0x4000, 0x419c, 0x010b,
-    /* 003 */ 0x8009, 0x419c, 0x0014,
-    /* 004 */ 0x4000, 0x407c, 0x010b,
-    /* 005 */ 0x8009, 0x407c, 0x0014,
-    /* 006 */ 0x4000, 0x41dc, 0x010b,
-    /* 007 */ 0x8009, 0x41dc, 0x0014,
-    /* 008 */ 0x0000, 0x01fc, 0x010b,
-    /* 009 */ 0x8009, 0x41fc, 0x0014,
-    /* 010 */ 0x00f0, 0x001c, 0x010b,
-    /* 011 */ 0x80f9, 0x401c, 0x0014,
-    /* 012 */ 0x00e0, 0x003c, 0x010b,
-    /* 013 */ 0x80e9, 0x403c, 0x0014,
-    /* 014 */ 0x00d0, 0x005c, 0x010b,
-    /* 015 */ 0x80d9, 0x405c, 0x0014,
-    /* 016 */ 0x8019, 0x401c, 0x0014,
-    /* 017 */ 0x8009, 0x403c, 0x0014,
-    /* 018 */ 0x80f9, 0x401c, 0x0014,
-    /* 019 */ 0x80f9, 0x405c, 0x0014,
-    /* 020 */ 0x8019, 0x405c, 0x0014
+                AnimationCel night_walk_cel033[] = {
+    /* Len */ 7,
+    /* 000 */ 0x00f7, 0x01fc, 0x0160,
+    /* 001 */ 0x00f7, 0x41f8, 0x008c,
+    /* 002 */ 0x8008, 0x41fc, 0x0014,
+    /* 003 */ 0x8028, 0x41fc, 0x0014,
+    /* 004 */ 0x8048, 0x41fc, 0x0014,
+    /* 005 */ 0x8068, 0x41fc, 0x0014,
+    /* 006 */ 0x4000, 0x4004, 0x012f
 };
                 
                 ");
