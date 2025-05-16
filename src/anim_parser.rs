@@ -1,4 +1,4 @@
-use egui::{pos2, vec2, Pos2, Rect, TextureHandle, Ui};
+use egui::{frame, pos2, vec2, Pos2, Rect, TextureHandle, Ui};
 
 use crate::Yanimator;
 
@@ -191,6 +191,8 @@ impl OAM {
 }
 
 pub struct AnimationCel {
+    pub name: String,
+    length: usize,
     oams: Vec<OAM>
 }
 
@@ -202,7 +204,7 @@ fn parse_hex_string(string: &str) -> Option<u8> {
 }
 
 impl AnimationCel {
-    pub fn from_c(c: &str) -> Option<AnimationCel> {
+    pub fn from_c(c: &str, name: &str) -> Option<AnimationCel> {
         let length_start = c.find("/* Len */ ")? + 10;
         let mut length_str: String = String::from("");
         let length: usize;
@@ -251,12 +253,71 @@ impl AnimationCel {
             oams.push(oam);
         }
 
-        Some(AnimationCel { oams })
+        Some(AnimationCel { oams, length, name: name.to_string() })
     }
 
     pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, offset: Pos2, size: f32, ui: &mut Ui) {
         for oam in self.oams.iter().rev() {
             oam.draw(textures, offset, size, ui);
         }
+    }
+}
+
+
+pub struct AnimationFrame {
+    pub cell: String,
+    pub duration: u8
+}
+
+pub struct Animation {
+    pub frames: Vec<AnimationFrame>,
+    pub name: String
+}
+
+impl Animation {
+    pub fn from_c(c: &str, name: &str) -> Option<Animation> {
+        let mut frame_positions = Vec::new();
+        let mut i = 0;
+
+        while let Some(pos) = c[i..].find("{") {
+            frame_positions.push(i + pos);
+            i += pos + 4;
+        }
+        frame_positions.remove(0);
+
+        let mut frames = Vec::new();
+
+        for pos in frame_positions.into_iter() {
+            let mut cel_name = String::new();
+            let mut duration_str = String::new();
+            i = pos + 1;
+            while c.chars().nth(i) != Some(',') {
+                if c.chars().nth(i) != Some(' ') {
+                    cel_name.push(c.chars().nth(i).unwrap());
+                }
+                i += 1;
+            }
+
+            i += 1;
+
+            while c.chars().nth(i) != Some('}') {
+                if c.chars().nth(i) != Some(' ') {
+                    duration_str.push(c.chars().nth(i).unwrap());
+                }
+                i += 1;
+            }
+
+            let duration = match duration_str.parse() {
+                Ok(value) => value,
+                Err(_) => return None,
+            };
+
+            frames.push(AnimationFrame {
+                cell: cel_name,
+                duration
+            })
+        }
+
+        Some(Animation { frames, name: name.to_string() })
     }
 }

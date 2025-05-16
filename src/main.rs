@@ -1,10 +1,11 @@
 use std::fs;
+use std::collections::HashMap;
 
 use eframe::egui;
 use egui::{epaint, pos2, vec2, Color32, ColorImage, Pos2, Rect, TextureHandle, Ui};
 use palette_parser::Palette;
 use sprite_parser::{Sprite, Spritesheet};
-use anim_parser::{AnimationCel, OAM};
+use anim_parser::{Animation, AnimationCel, OAM};
 
 use rayon::prelude::*;
 
@@ -19,26 +20,28 @@ fn main() -> eframe::Result {
 
 struct Yanimator {
     textures: Vec<Vec<TextureHandle>>,
-    sprite_id: usize,
+    animation_id: usize,
+    animation_cel_id: usize,
     palette: Palette,
     spritesheet: Spritesheet,
     offset: Pos2,
     zoom: f32,
-    animation_cels: Vec<AnimationCel>
+    animation_cels: HashMap<String, AnimationCel>,
+    animations: Vec<Animation>
 }
+
+const TEST_PALETTE: &str = "polyrhythm.pal";
+const TEST_SPRITES: &str = "polyrhythm_obj.4bpp";
+const TEST_ANIM_CELS: &str = "polyrhythm_anim_cels.c";
+const TEST_ANIM: &str = "polyrhythm_anim.c";
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // Load Palette
-        let palette = Palette::from_pal("night_walk.pal").unwrap();
-
-        /*for pal in palette.palettes.iter() {
-            println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
-        }*/
-
+        let palette = Palette::from_pal(TEST_PALETTE).unwrap();
 
         // Load Spritesheet and create TextureHandles
-        let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
+        let spritesheet = Spritesheet::from_4bpp(TEST_SPRITES).unwrap();
         let mut textures: Vec<Vec<TextureHandle>> =  Vec::new();
         
         for pal in palette.palettes.iter() {
@@ -82,16 +85,16 @@ impl Yanimator {
             textures.push(palette_textures);
         }
 
-        println!("{:?}", palette.palettes);
+        //println!("{:?}", palette.palettes);
         
         // Load AnimationCels
         
-        let test_cels_file = fs::read_to_string("night_walk_anim_cels.c").unwrap();
+        let test_cels_file = fs::read_to_string(TEST_ANIM_CELS).unwrap();
         
         let mut cel_positions = Vec::new();
         let mut i = 0;
 
-        while let Some(pos) = test_cels_file[i..].find("[] = {") {
+        while let Some(pos) = test_cels_file[i..].find("AnimationCel ") {
             cel_positions.push(i + pos);
             i += pos + 7;
         }
@@ -100,8 +103,17 @@ impl Yanimator {
             .par_iter()
             .filter_map(|&start| {
                 let mut cel_str = String::new();
+                let mut cel_name = String::new();
 
-                for i in start..test_cels_file.len() {
+                for i in start + 13..test_cels_file.len() {
+                    if test_cels_file.chars().nth(i) != Some('[') {
+                        cel_name.push(test_cels_file.chars().nth(i).unwrap());
+                    } else {
+                        break;
+                    }
+                }
+
+                for i in start + 13 + cel_name.len()..test_cels_file.len() {
                     if test_cels_file.chars().nth(i) != Some(';') {
                         cel_str.push(test_cels_file.chars().nth(i).unwrap());
                     } else {
@@ -109,19 +121,58 @@ impl Yanimator {
                     }
                 }
 
-                AnimationCel::from_c(&cel_str)
+                AnimationCel::from_c(&cel_str, &cel_name)
             })
+            .map(|cel| (cel.name.clone(), cel))
             .collect();
         
-        
+        // Load Animations
+
+        let test_anim_file = fs::read_to_string(TEST_ANIM).unwrap();
+
+        let mut anim_positions = Vec::new();
+        i = 0;
+
+        while let Some(pos) = test_anim_file[i..].find("struct Animation ") {
+            anim_positions.push(i + pos);
+            i += pos + 17;
+        }
+
+        let animations = anim_positions
+            .par_iter()
+            .filter_map(|&start| {
+                let mut anim_str = String::new();
+                let mut anim_name = String::new();
+
+                for i in start + 17..test_anim_file.len() {
+                    if test_anim_file.chars().nth(i) != Some('[') {
+                        anim_name.push(test_anim_file.chars().nth(i).unwrap());
+                    } else {
+                        break;
+                    }
+                }
+
+                for i in start + 17 + anim_name.len()..test_anim_file.len() {
+                    if test_anim_file.chars().nth(i) != Some(';') {
+                        anim_str.push(test_anim_file.chars().nth(i).unwrap());
+                    } else {
+                        break;
+                    }
+                }
+                Animation::from_c(&anim_str, &anim_name)
+            })
+            .collect();
+
         Self {
             textures,
-            sprite_id: 0,
+            animation_id: 0,
+            animation_cel_id: 0,
             spritesheet, 
             palette, 
             offset: pos2(0.0, 0.0),
             zoom: 20.0,
-            animation_cels
+            animation_cels,
+            animations
         }
     }
 }
@@ -153,26 +204,15 @@ impl eframe::App for Yanimator {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(format!("{}", self.sprite_id));
-            ui.add(egui::DragValue::new(&mut self.sprite_id).speed(0.1).range(0..=self.animation_cels.len()));
-            /*let test_cel = AnimationCel::from_c(
-                "
-                
-                AnimationCel night_walk_cel033[] = {
-    /* Len */ 7,
-    /* 000 */ 0x00f7, 0x01fc, 0x0160,
-    /* 001 */ 0x00f7, 0x41f8, 0x008c,
-    /* 002 */ 0x8008, 0x41fc, 0x0014,
-    /* 003 */ 0x8028, 0x41fc, 0x0014,
-    /* 004 */ 0x8048, 0x41fc, 0x0014,
-    /* 005 */ 0x8068, 0x41fc, 0x0014,
-    /* 006 */ 0x4000, 0x4004, 0x012f
-};
-                
-                ");*/
-            //let test_cel = ;
-            //if let Some(cel) = test_cel {
-            if let Some(animation_cel) = self.animation_cels.get(self.sprite_id) {
+            
+            ui.add(egui::DragValue::new(&mut self.animation_id).speed(0.1).range(0..=self.animations.len() - 1));
+
+            let animation = &self.animations[self.animation_id];
+            ui.heading(format!("{}", animation.name));
+            ui.add(egui::DragValue::new(&mut self.animation_cel_id).speed(0.1).range(0..=animation.frames.len() - 1));
+
+            if let Some(animation_cel) = self.animation_cels.get(&animation.frames[self.animation_cel_id].cell) {
+                ui.heading(format!("{}", animation_cel.name));
                 animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
             }
             //}
