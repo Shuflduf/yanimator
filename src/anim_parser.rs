@@ -174,7 +174,7 @@ impl OAM {
                             texture = texture.uv(Rect::from_min_max(pos2(0.0, 1.0), pos2(1.0, 0.0)));
                         },
                         OAMFlip::Both => {
-                            texture = texture.uv(Rect::from_min_max(pos2(1.0, 1.0), pos2(1.0, 1.0)));
+                            texture = texture.uv(Rect::from_min_max(pos2(1.0, 1.0), pos2(0.0, 0.0)));
                         },
                         _ => {}
                     }

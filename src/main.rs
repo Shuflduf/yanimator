@@ -30,10 +30,26 @@ struct Yanimator {
     animations: Vec<Animation>
 }
 
-const TEST_PALETTE: &str = "polyrhythm.pal";
+/*const TEST_PALETTE: &str = "polyrhythm.pal";
 const TEST_SPRITES: &str = "polyrhythm_obj.4bpp";
 const TEST_ANIM_CELS: &str = "polyrhythm_anim_cels.c";
 const TEST_ANIM: &str = "polyrhythm_anim.c";
+
+
+const TEST_PALETTE: &str = "night_walk.pal";
+const TEST_SPRITES: &str = "night_walk_obj.4bpp";
+const TEST_ANIM_CELS: &str = "night_walk_anim_cels.c";
+const TEST_ANIM: &str = "night_walk_anim.c";
+
+const TEST_PALETTE: &str = "samurai_slice.pal";
+const TEST_SPRITES: &str = "samurai_slice_obj.4bpp";
+const TEST_ANIM_CELS: &str = "samurai_slice_anim_cels.c";
+const TEST_ANIM: &str = "samurai_slice_anim.c";*/
+
+const TEST_PALETTE: &str = "tap_trial.pal";
+const TEST_SPRITES: &str = "tap_trial_obj.4bpp";
+const TEST_ANIM_CELS: &str = "tap_trial_anim_cels.c";
+const TEST_ANIM: &str = "tap_trial_anim.c";
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -182,7 +198,7 @@ impl eframe::App for Yanimator {
        //ctx.set_debug_on_hover(true);
 
         let events = ctx.input(|i| i.events.clone());
-
+        
         for event in events {
             match event {
                 egui::Event::MouseMoved(pos) => {
