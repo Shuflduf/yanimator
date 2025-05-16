@@ -30,7 +30,7 @@ pub struct OAM {
     flip: OAMFlip,
     pub x: i16,
     pub y: i16,
-    palette: u16,
+    palette: usize,
     tile: u16
 }
 
@@ -78,7 +78,7 @@ impl OAM {
             x -= 0x200;
         }
         
-        let palette = word3 >> 0xc;
+        let palette = (word3 >> 0xc) as usize;
         let tile = word3 & 0x0FFF;
         
         OAM {
@@ -149,7 +149,7 @@ impl OAM {
         return sprite_indexes;
     }
 
-    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, size: f32, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, offset: Pos2, size: f32, ui: &mut Ui) {
         let oam_sprites = self.get_sprite_indexes();
             
         let sprite_size = size;
@@ -164,7 +164,7 @@ impl OAM {
                 );
                 
                 ui.put(rect, |ui: &mut Ui| {
-                    let mut texture = egui::Image::new(&textures[oam_sprites[y][x]]);
+                    let mut texture = egui::Image::new(&textures[self.palette][oam_sprites[y][x]]);
                     
                     match self.flip { 
                         OAMFlip::Horizontal => {
@@ -178,7 +178,7 @@ impl OAM {
                         },
                         _ => {}
                     }
-
+                    
                     ui.add(
                         texture.fit_to_exact_size(vec2(sprite_size, sprite_size))
                     )
@@ -254,7 +254,7 @@ impl AnimationCel {
         Some(AnimationCel { oams })
     }
 
-    pub fn draw(&self, textures: &Vec<TextureHandle>, offset: Pos2, size: f32, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, offset: Pos2, size: f32, ui: &mut Ui) {
         for oam in self.oams.iter().rev() {
             oam.draw(textures, offset, size, ui);
         }

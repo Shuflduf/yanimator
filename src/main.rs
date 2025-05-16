@@ -18,7 +18,7 @@ fn main() -> eframe::Result {
 }
 
 struct Yanimator {
-    textures: Vec<TextureHandle>,
+    textures: Vec<Vec<TextureHandle>>,
     sprite_id: usize,
     palette: Palette,
     spritesheet: Spritesheet,
@@ -32,49 +32,57 @@ impl Yanimator {
         // Load Palette
         let palette = Palette::from_pal("night_walk.pal").unwrap();
 
-        for pal in palette.colors.iter() {
+        /*for pal in palette.palettes.iter() {
             println!("R: {}, G: {}, B: {}", pal.r, pal.g, pal.b);
-        }
+        }*/
 
 
         // Load Spritesheet and create TextureHandles
-        let spritesheet = Spritesheet::from_4bpp("clappy_trio_obj.4bpp").unwrap();
-        let mut textures: Vec<TextureHandle> =  Vec::new();
+        let spritesheet = Spritesheet::from_4bpp("night_walk_obj.4bpp").unwrap();
+        let mut textures: Vec<Vec<TextureHandle>> =  Vec::new();
         
-        for i in 0..spritesheet.sprites.len() {
-            let sprite = &spritesheet.sprites[i];
-            let mut pixels: Vec<u8> = Vec::new();
-        
-            for i in 0..0x40 {
-                let palette_id = sprite.pixels[i];
-                
-                if palette_id == 0 {
-                    pixels.push(0);
-                    pixels.push(0);
-                    pixels.push(0);
-                    pixels.push(0);
-                } else {
-                    let rgb = &palette.colors[palette_id as usize];
-                    pixels.push(rgb.r);
-                    pixels.push(rgb.g);
-                    pixels.push(rgb.b);
-                    pixels.push(255);
+        for pal in palette.palettes.iter() {
+            let mut palette_textures = Vec::new();
+
+            for i in 0..spritesheet.sprites.len() {
+                let sprite = &spritesheet.sprites[i];
+                let mut pixels: Vec<u8> = Vec::new();
+            
+                for i in 0..0x40 {
+                    let palette_id = sprite.pixels[i];
+                    
+                    if palette_id == 0 {
+                        pixels.push(0);
+                        pixels.push(0);
+                        pixels.push(0);
+                        pixels.push(0);
+                    } else {
+                        let rgb = &pal[palette_id as usize];
+                        pixels.push(rgb.r);
+                        pixels.push(rgb.g);
+                        pixels.push(rgb.b);
+                        pixels.push(255);
+                    }
+                    
                 }
                 
+                palette_textures.push(
+                    cc.egui_ctx.load_texture(
+                    i.to_string(),
+                    ColorImage::from_rgba_unmultiplied([8, 8], &pixels), 
+                    egui::TextureOptions {
+                        magnification: egui::TextureFilter::Nearest,
+                        minification: egui::TextureFilter::Nearest,
+                        wrap_mode: egui::TextureWrapMode::Repeat,
+                        mipmap_mode: None,
+                    })
+                )
             }
-            
-            textures.push(
-                cc.egui_ctx.load_texture(
-                i.to_string(),
-                ColorImage::from_rgba_unmultiplied([8, 8], &pixels), 
-                egui::TextureOptions {
-                    magnification: egui::TextureFilter::Nearest,
-                    minification: egui::TextureFilter::Nearest,
-                    wrap_mode: egui::TextureWrapMode::Repeat,
-                    mipmap_mode: None,
-                })
-            )
+
+            textures.push(palette_textures);
         }
+
+        println!("{:?}", palette.palettes);
         
         // Load AnimationCels
         
@@ -164,9 +172,9 @@ impl eframe::App for Yanimator {
                 ");*/
             //let test_cel = ;
             //if let Some(cel) = test_cel {
-                if let Some(animation_cel) = self.animation_cels.get(self.sprite_id) {
-                    animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
-                }
+            if let Some(animation_cel) = self.animation_cels.get(self.sprite_id) {
+                animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
+            }
             //}
 
             
