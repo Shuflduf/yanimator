@@ -271,7 +271,8 @@ pub struct AnimationFrame {
 
 pub struct Animation {
     pub frames: Vec<AnimationFrame>,
-    pub name: String
+    pub name: String,
+    pub current_frame: usize
 }
 
 impl Animation {
@@ -318,6 +319,6 @@ impl Animation {
             })
         }
 
-        Some(Animation { frames, name: name.to_string() })
+        Some(Animation { frames, name: name.to_string(), current_frame: 0 })
     }
 }

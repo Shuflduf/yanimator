@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, time::Instant};
 use std::collections::HashMap;
 
 use eframe::egui;
@@ -27,7 +27,9 @@ struct Yanimator {
     offset: Pos2,
     zoom: f32,
     animation_cels: HashMap<String, AnimationCel>,
-    animations: Vec<Animation>
+    animations: Vec<Animation>,
+    last_frame_time: Instant,
+    frames: usize
 }
 
 /*const TEST_PALETTE: &str = "polyrhythm.pal";
@@ -39,17 +41,17 @@ const TEST_ANIM: &str = "polyrhythm_anim.c";
 const TEST_PALETTE: &str = "night_walk.pal";
 const TEST_SPRITES: &str = "night_walk_obj.4bpp";
 const TEST_ANIM_CELS: &str = "night_walk_anim_cels.c";
-const TEST_ANIM: &str = "night_walk_anim.c";
+const TEST_ANIM: &str = "night_walk_anim.c";*/
 
 const TEST_PALETTE: &str = "samurai_slice.pal";
 const TEST_SPRITES: &str = "samurai_slice_obj.4bpp";
 const TEST_ANIM_CELS: &str = "samurai_slice_anim_cels.c";
-const TEST_ANIM: &str = "samurai_slice_anim.c";*/
+const TEST_ANIM: &str = "samurai_slice_anim.c";
 
-const TEST_PALETTE: &str = "tap_trial.pal";
+/*const TEST_PALETTE: &str = "tap_trial.pal";
 const TEST_SPRITES: &str = "tap_trial_obj.4bpp";
 const TEST_ANIM_CELS: &str = "tap_trial_anim_cels.c";
-const TEST_ANIM: &str = "tap_trial_anim.c";
+const TEST_ANIM: &str = "tap_trial_anim.c";*/
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -188,7 +190,9 @@ impl Yanimator {
             offset: pos2(0.0, 0.0),
             zoom: 20.0,
             animation_cels,
-            animations
+            animations,
+            last_frame_time: Instant::now(),
+            frames: 0
         }
     }
 }
@@ -196,6 +200,30 @@ impl Yanimator {
 impl eframe::App for Yanimator {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
        //ctx.set_debug_on_hover(true);
+        
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.last_frame_time).as_secs_f32();
+        
+        if elapsed >= 1.0 / 60.0 {
+            self.frames += 1;
+            self.last_frame_time = now;
+            
+        }
+        
+        let animation = &mut self.animations[self.animation_id];
+                        
+        if self.frames > animation.frames[animation.current_frame].duration as usize {
+            self.frames = 0;
+            let mut next_anim_id = animation.current_frame + 1;
+        
+            if next_anim_id >= animation.frames.len() {
+                next_anim_id = 0;
+            }
+        
+            animation.current_frame = next_anim_id;
+        }
+
+        ctx.request_repaint();
 
         let events = ctx.input(|i| i.events.clone());
         
@@ -220,14 +248,17 @@ impl eframe::App for Yanimator {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            
-            ui.add(egui::DragValue::new(&mut self.animation_id).speed(0.1).range(0..=self.animations.len() - 1));
-
             let animation = &self.animations[self.animation_id];
-            ui.heading(format!("{}", animation.name));
-            ui.add(egui::DragValue::new(&mut self.animation_cel_id).speed(0.1).range(0..=animation.frames.len() - 1));
 
-            if let Some(animation_cel) = self.animation_cels.get(&animation.frames[self.animation_cel_id].cell) {
+            ui.add(egui::DragValue::new(&mut self.animation_id).speed(0.1).range(0..=self.animations.len() - 1));
+            
+           
+            
+            ui.heading(format!("frames: {}", self.frames));
+            ui.heading(format!("{} - frame {}", animation.name, animation.current_frame));
+            //ui.add(egui::DragValue::new(&mut self.animation_cel_id).speed(0.1).range(0..=animation.frames.len() - 1));
+            
+            if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
                 ui.heading(format!("{}", animation_cel.name));
                 animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
             }
