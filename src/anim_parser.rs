@@ -149,17 +149,17 @@ impl OAM {
         return sprite_indexes;
     }
 
-    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, offset: Pos2, size: f32, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {
         let oam_sprites = self.get_sprite_indexes();
             
-        let sprite_size = size;
+        let sprite_size = 20.0;
 
         for y in 0..oam_sprites.len() {
             for x in 0..oam_sprites[y].len() {
                 let rect = egui::Rect::from_min_size(
                     pos2(
-                        (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0 + offset.x, 
-                        (y as f32) * sprite_size + (self.y as f32) * sprite_size / 8.0 + offset.y),
+                        (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0, 
+                        (y as f32) * sprite_size + (self.y as f32) * sprite_size / 8.0),
                     vec2(sprite_size, sprite_size)
                 );
                 
@@ -256,9 +256,9 @@ impl AnimationCel {
         Some(AnimationCel { oams, length, name: name.to_string() })
     }
 
-    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, offset: Pos2, size: f32, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {
         for oam in self.oams.iter().rev() {
-            oam.draw(textures, offset, size, ui);
+            oam.draw(textures, ui);
         }
     }
 }

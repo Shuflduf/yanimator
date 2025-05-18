@@ -2,7 +2,9 @@ use std::{fs, time::Instant};
 use std::collections::HashMap;
 
 use eframe::egui;
-use egui::{menu, pos2, ColorImage, Pos2, TextureHandle};
+use eframe::glow::Texture;
+use egui::{include_image, menu, pos2, ColorImage, Pos2, Rect, Scene, SizeHint, TextureHandle};
+use egui_extras::install_image_loaders;
 use palette_parser::Palette;
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
@@ -15,6 +17,7 @@ mod anim_parser;
 mod panels;
 
 fn main() -> eframe::Result {
+    
     let native_options = eframe::NativeOptions::default();
     eframe::run_native("Yanimator", native_options, Box::new(|cc| Ok(Box::new(Yanimator::new(cc)))))
 }
@@ -31,6 +34,7 @@ struct Yanimator {
     animations: Vec<Animation>,
     last_frame_time: Instant,
     frames: usize,
+    viewport_rect: Rect
 }
 
 /*const TEST_PALETTE: &str = "polyrhythm.pal";
@@ -191,7 +195,7 @@ impl Yanimator {
                 Animation::from_c(&anim_str, &anim_name)
             })
             .collect();
-
+        
         Self {
             textures,
             animation_id: 0,
@@ -203,7 +207,8 @@ impl Yanimator {
             animation_cels,
             animations,
             last_frame_time: Instant::now(),
-            frames: 0
+            frames: 0,
+            viewport_rect: Rect::ZERO
         }
     }
 }
@@ -298,39 +303,27 @@ impl eframe::App for Yanimator {
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            
-            
             let animation = &self.animations[self.animation_id];
-
-            ui.add(egui::DragValue::new(&mut self.animation_id).speed(0.1).range(0..=self.animations.len() - 1));
             
-           
-            
-            ui.heading(format!("frames: {}", self.frames));
-            ui.heading(format!("{} - frame {}", animation.name, animation.current_frame));
+            //ui.heading(format!("frames: {}", self.frames));
+            //ui.heading(format!("{} - frame {}", animation.name, animation.current_frame));
             //ui.add(egui::DragValue::new(&mut self.animation_cel_id).speed(0.1).range(0..=animation.frames.len() - 1));
             
+            Scene::default()
+                .zoom_range(0.1..=4.0)
+                .show(ui, &mut self.viewport_rect,|ui| {
+                    if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
+                        //ui.heading(format!("{}", animation_cel.name));
+                        animation_cel.draw(&self.textures, ui);
+                    }
+                });
             //egui::CentralPanel::default().show_inside(ui, |ui|{
-                ui.heading("Viewport");
-                if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
-                    ui.heading(format!("{}", animation_cel.name));
-                    animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
-                }
+                //ui.heading("Viewport");
+                
             //});
             //}
 
-            //let test_oam = OAM::new(&vec![0x00, 0xe8, 0x41, 0xf8, 0x20, 0xd4]);
-            //let test_oam2 = OAM::new(&vec![0x40, 0xf8, 0x01, 0xf8, 0x21, 0x48]);
-            
-            //test_oam2.draw(self, ui);
-            //test_oam.draw(self, ui);
-            
-            //println!("{:?}, {:?}", test_oam, test_oam2);
-            
-            
-            /*ui.add_space(100.0);
-            ui.heading(format!("{}", self.sprite_id));
-            egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
+            /*egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
                 let mut i = 0;
                 //let mut alternate = true;
                 while i < self.textures.len() {
