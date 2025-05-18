@@ -183,8 +183,8 @@ impl OAM {
                         texture.fit_to_exact_size(vec2(sprite_size, sprite_size))
                     )
                 });
-
-                ui.allocate_space(vec2(sprite_size, sprite_size));
+                
+                //ui.allocate_space(vec2(sprite_size, sprite_size));
             }
         }
     }

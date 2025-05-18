@@ -2,16 +2,17 @@ use std::{fs, time::Instant};
 use std::collections::HashMap;
 
 use eframe::egui;
-use egui::{epaint, pos2, vec2, Color32, ColorImage, Pos2, Rect, TextureHandle, Ui};
+use egui::{menu, pos2, ColorImage, Pos2, TextureHandle};
 use palette_parser::Palette;
-use sprite_parser::{Sprite, Spritesheet};
-use anim_parser::{Animation, AnimationCel, OAM};
+use sprite_parser::Spritesheet;
+use anim_parser::{Animation, AnimationCel};
 
 use rayon::prelude::*;
 
 mod palette_parser;
 mod sprite_parser;
 mod anim_parser;
+mod panels;
 
 fn main() -> eframe::Result {
     let native_options = eframe::NativeOptions::default();
@@ -29,7 +30,7 @@ struct Yanimator {
     animation_cels: HashMap<String, AnimationCel>,
     animations: Vec<Animation>,
     last_frame_time: Instant,
-    frames: usize
+    frames: usize,
 }
 
 /*const TEST_PALETTE: &str = "polyrhythm.pal";
@@ -41,17 +42,27 @@ const TEST_ANIM: &str = "polyrhythm_anim.c";
 const TEST_PALETTE: &str = "night_walk.pal";
 const TEST_SPRITES: &str = "night_walk_obj.4bpp";
 const TEST_ANIM_CELS: &str = "night_walk_anim_cels.c";
-const TEST_ANIM: &str = "night_walk_anim.c";*/
+const TEST_ANIM: &str = "night_walk_anim.c";
 
 const TEST_PALETTE: &str = "samurai_slice.pal";
 const TEST_SPRITES: &str = "samurai_slice_obj.4bpp";
 const TEST_ANIM_CELS: &str = "samurai_slice_anim_cels.c";
 const TEST_ANIM: &str = "samurai_slice_anim.c";
 
+const TEST_PALETTE: &str = "karate_man.pal";
+const TEST_SPRITES: &str = "karate_man_obj.4bpp";
+const TEST_ANIM_CELS: &str = "karate_man_anim_cells.inc.c";
+const TEST_ANIM: &str = "karate_man_anim.c";*/
+
 /*const TEST_PALETTE: &str = "tap_trial.pal";
 const TEST_SPRITES: &str = "tap_trial_obj.4bpp";
 const TEST_ANIM_CELS: &str = "tap_trial_anim_cels.c";
 const TEST_ANIM: &str = "tap_trial_anim.c";*/
+
+const TEST_PALETTE: &str = "clappy_trio.pal";
+const TEST_SPRITES: &str = "clappy_trio_obj.4bpp";
+const TEST_ANIM_CELS: &str = "clappy_trio_anim_cels.c";
+const TEST_ANIM: &str = "clappy_trio_anim.c";
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -199,7 +210,7 @@ impl Yanimator {
 
 impl eframe::App for Yanimator {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-       //ctx.set_debug_on_hover(true);
+        //ctx.set_debug_on_hover(true);
         
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_frame_time).as_secs_f32();
@@ -222,7 +233,7 @@ impl eframe::App for Yanimator {
         
             animation.current_frame = next_anim_id;
         }
-
+        
         ctx.request_repaint();
 
         let events = ctx.input(|i| i.events.clone());
@@ -247,7 +258,48 @@ impl eframe::App for Yanimator {
             }
         }
 
+        egui::TopBottomPanel::top("menu")
+            .show(ctx, |ui| {
+                // Use the menu_bar function here
+                menu::bar(ui, |ui| {
+                    ui.menu_button("File", |ui| {
+                        if ui.button("New Project [Ctrl+N]").clicked() {
+                            // Blahh
+                        }
+
+                        if ui.button("Open Project [Ctrl+O]").clicked() {
+                            // Blahh
+                        }
+                    });
+                });
+            });
+
+        egui::TopBottomPanel::top("topbar")
+            .show(ctx, |ui| {
+                panels::topbar::ui(ui, self);
+            });
+        
+        egui::TopBottomPanel::bottom("timeline")
+            .resizable(true)
+            .show(ctx, |ui|{
+                ui.heading("Timeline");
+                ui.add_space(ui.available_height());
+            });
+        
+        egui::SidePanel::left("animation_cells")
+            .resizable(true)
+            .show(ctx, |ui| {
+                ui.heading("Animation Cells");
+                let rect = egui::Rect::from_min_size(
+                    ui.cursor().min,
+                    egui::vec2(ui.available_width().max(1.0), ui.available_height())
+                );
+                ui.allocate_rect(rect, egui::Sense::hover());
+            });
+
         egui::CentralPanel::default().show(ctx, |ui| {
+            
+            
             let animation = &self.animations[self.animation_id];
 
             ui.add(egui::DragValue::new(&mut self.animation_id).speed(0.1).range(0..=self.animations.len() - 1));
@@ -258,20 +310,21 @@ impl eframe::App for Yanimator {
             ui.heading(format!("{} - frame {}", animation.name, animation.current_frame));
             //ui.add(egui::DragValue::new(&mut self.animation_cel_id).speed(0.1).range(0..=animation.frames.len() - 1));
             
-            if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
-                ui.heading(format!("{}", animation_cel.name));
-                animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
-            }
+            //egui::CentralPanel::default().show_inside(ui, |ui|{
+                ui.heading("Viewport");
+                if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
+                    ui.heading(format!("{}", animation_cel.name));
+                    animation_cel.draw(&self.textures, self.offset, self.zoom, ui);
+                }
+            //});
             //}
-
-            
 
             //let test_oam = OAM::new(&vec![0x00, 0xe8, 0x41, 0xf8, 0x20, 0xd4]);
             //let test_oam2 = OAM::new(&vec![0x40, 0xf8, 0x01, 0xf8, 0x21, 0x48]);
             
             //test_oam2.draw(self, ui);
             //test_oam.draw(self, ui);
-
+            
             //println!("{:?}, {:?}", test_oam, test_oam2);
             
             
@@ -296,6 +349,11 @@ impl eframe::App for Yanimator {
                     i += 1;
                 }
             });*/
+            
+            
         });
+    
+        
+        
     }
 }
