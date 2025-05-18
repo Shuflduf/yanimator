@@ -13,7 +13,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                 if ui.button(&animation.name).clicked() {
                     app.animation_id = i;
                 }
-                
+
                 i += 1;
             }
         });

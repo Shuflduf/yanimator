@@ -6,6 +6,7 @@ use eframe::glow::Texture;
 use egui::{include_image, menu, pos2, ColorImage, Pos2, Rect, Scene, SizeHint, TextureHandle};
 use egui_extras::install_image_loaders;
 use palette_parser::Palette;
+use panels::timeline::Timeline;
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
@@ -34,7 +35,9 @@ struct Yanimator {
     animations: Vec<Animation>,
     last_frame_time: Instant,
     frames: usize,
-    viewport_rect: Rect
+    viewport_rect: Rect,
+
+    timeline: Timeline
 }
 
 /*const TEST_PALETTE: &str = "polyrhythm.pal";
@@ -208,7 +211,8 @@ impl Yanimator {
             animations,
             last_frame_time: Instant::now(),
             frames: 0,
-            viewport_rect: Rect::ZERO
+            viewport_rect: Rect::ZERO,
+            timeline: Timeline::init()
         }
     }
 }
@@ -216,6 +220,7 @@ impl Yanimator {
 impl eframe::App for Yanimator {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //ctx.set_debug_on_hover(true);
+        install_image_loaders(ctx);
         
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_frame_time).as_secs_f32();
@@ -287,8 +292,7 @@ impl eframe::App for Yanimator {
         egui::TopBottomPanel::bottom("timeline")
             .resizable(true)
             .show(ctx, |ui|{
-                ui.heading("Timeline");
-                ui.add_space(ui.available_height());
+                panels::timeline::ui(ui, self);
             });
         
         egui::SidePanel::left("animation_cells")
