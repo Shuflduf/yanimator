@@ -6,7 +6,7 @@ use eframe::glow::Texture;
 use egui::{include_image, menu, pos2, ColorImage, Pos2, Rect, Scene, SizeHint, TextureHandle};
 use egui_extras::install_image_loaders;
 use palette_parser::Palette;
-use panels::timeline::Timeline;
+use panels::timeline::{self, Timeline};
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
@@ -226,28 +226,29 @@ impl eframe::App for Yanimator {
         let elapsed = now.duration_since(self.last_frame_time).as_secs_f32();
         
         if elapsed >= 1.0 / 60.0 {
-            self.frames += 1;
+            if self.timeline.playing {self.frames += 1;}
             self.last_frame_time = now;
-            
         }
         
         let animation = &mut self.animations[self.animation_id];
-                        
-        if self.frames > animation.frames[animation.current_frame].duration as usize {
+        
+        if self.frames == animation.get_total_frames() {
             self.frames = 0;
-            let mut next_anim_id = animation.current_frame + 1;
-        
-            if next_anim_id >= animation.frames.len() {
-                next_anim_id = 0;
-            }
-        
-            animation.current_frame = next_anim_id;
         }
         
-        ctx.request_repaint();
+        animation.current_frame = animation.get_anim_frame_from_frames(self.frames);
 
+        
+        
+        ctx.request_repaint();
+        
+        let mouse_pos = ctx.input(|i| i.pointer.hover_pos()).unwrap_or(pos2(0.0, 0.0));
         let events = ctx.input(|i| i.events.clone());
         
+        ctx.input(|i| {
+            panels::timeline::input(i, self);
+        });
+
         for event in events {
             match event {
                 egui::Event::MouseMoved(pos) => {
@@ -256,13 +257,6 @@ impl eframe::App for Yanimator {
                             self.offset += pos;
                         }
                     })
-                }
-                egui::Event::MouseWheel { unit, delta, modifiers } => {
-                    self.zoom += delta.y;
-
-                    if self.zoom <= 1.0 {
-                        self.zoom = 1.0;
-                    }
                 }
                 _ => {}
             }
@@ -276,7 +270,7 @@ impl eframe::App for Yanimator {
                         if ui.button("New Project [Ctrl+N]").clicked() {
                             // Blahh
                         }
-
+                        
                         if ui.button("Open Project [Ctrl+O]").clicked() {
                             // Blahh
                         }

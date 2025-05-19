@@ -321,4 +321,45 @@ impl Animation {
 
         Some(Animation { frames, name: name.to_string(), current_frame: 0 })
     }
+
+    pub fn get_total_frame_duration(&self, index: usize) -> usize {
+        let mut result = 0;
+        
+        for i in 0..index {
+            result += self.frames[i].duration as usize;
+        }
+
+        result
+    }
+
+    pub fn get_total_frames(&self) -> usize {
+        let mut result = 0;
+
+        for frame in &self.frames {
+            result += frame.duration as usize;
+        }
+
+        result
+    }
+    
+    pub fn get_anim_frame_from_frames(&self, frames: usize) -> usize {
+        if frames > self.get_total_frames() {
+            return 0;
+        }
+
+        let mut result = 0;
+        let mut i = 0;
+        let mut current_frame = &self.frames[0];
+        
+        for _ in 0..frames {
+            if i == current_frame.duration {
+                i = 0;
+                result += 1;
+                current_frame = &self.frames[result];
+            }
+            i += 1;
+        }
+
+        result
+    }
 }

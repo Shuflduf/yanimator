@@ -1,4 +1,4 @@
-use egui::{vec2, Ui};
+use egui::{vec2, MouseWheelUnit, Ui};
 
 use crate::Yanimator;
 
@@ -9,14 +9,16 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         ui.horizontal(|ui| {
             let mut i = 0;
 
-            for animation in &app.animations {
+            for animation in &mut app.animations {
                 if ui.button(&animation.name).clicked() {
+                    animation.current_frame = 0;
                     app.animation_id = i;
+                    app.frames = 0;
                 }
 
                 i += 1;
             }
         });
     });
-    
 }
+
