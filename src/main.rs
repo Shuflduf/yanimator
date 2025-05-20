@@ -237,8 +237,6 @@ impl eframe::App for Yanimator {
         }
         
         animation.current_frame = animation.get_anim_frame_from_frames(self.frames);
-
-        
         
         ctx.request_repaint();
         
@@ -292,20 +290,11 @@ impl eframe::App for Yanimator {
         egui::SidePanel::left("animation_cells")
             .resizable(true)
             .show(ctx, |ui| {
-                ui.heading("Animation Cells");
-                let rect = egui::Rect::from_min_size(
-                    ui.cursor().min,
-                    egui::vec2(ui.available_width().max(1.0), ui.available_height())
-                );
-                ui.allocate_rect(rect, egui::Sense::hover());
+                panels::animation_cells::ui(ui, self);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let animation = &self.animations[self.animation_id];
-            
-            //ui.heading(format!("frames: {}", self.frames));
-            //ui.heading(format!("{} - frame {}", animation.name, animation.current_frame));
-            //ui.add(egui::DragValue::new(&mut self.animation_cel_id).speed(0.1).range(0..=animation.frames.len() - 1));
             
             Scene::default()
                 .zoom_range(0.1..=4.0)
@@ -313,13 +302,9 @@ impl eframe::App for Yanimator {
                     if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
                         //ui.heading(format!("{}", animation_cel.name));
                         animation_cel.draw(&self.textures, ui);
+                        
                     }
                 });
-            //egui::CentralPanel::default().show_inside(ui, |ui|{
-                //ui.heading("Viewport");
-                
-            //});
-            //}
 
             /*egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
                 let mut i = 0;
@@ -340,11 +325,6 @@ impl eframe::App for Yanimator {
                     i += 1;
                 }
             });*/
-            
-            
         });
-    
-        
-        
     }
 }
