@@ -1,6 +1,6 @@
 use egui::Ui;
 
-use crate::{anim_parser::{AnimationCel, OAMFlip, OAMShape, OAMSize}, Yanimator};
+use crate::{anim_parser::{OAMFlip, OAMShape, OAMSize}, Yanimator};
 
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     ui.heading("Properties");

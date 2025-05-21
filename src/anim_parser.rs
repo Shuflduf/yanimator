@@ -1,6 +1,4 @@
-use egui::{frame, pos2, vec2, Color32, Pos2, Rect, TextureHandle, Ui};
-
-use crate::Yanimator;
+use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -185,7 +183,7 @@ impl OAM {
                     }
 
                     if self.selected {
-                        texture = texture.tint(Color32::PLACEHOLDER);
+                        texture = texture.tint(Color32::GRAY);
                     }
                     
                     ui.add(
@@ -201,7 +199,6 @@ impl OAM {
 
 pub struct AnimationCel {
     pub name: String,
-    length: usize,
     pub oams: Vec<OAM>
 }
 
@@ -215,7 +212,7 @@ fn parse_hex_string(string: &str) -> Option<u8> {
 impl AnimationCel {
     pub fn from_c(c: &str, name: &str) -> Option<AnimationCel> {
         let length_start = c.find("/* Len */ ")? + 10;
-        let mut length_str: String = String::from("");
+        /*let mut length_str: String = String::from("");
         let length: usize;
 
         for i in length_start..length_start + 3 {
@@ -229,7 +226,7 @@ impl AnimationCel {
         length = match length_str.parse() {
             Ok(value) => value,
             Err(_) => return None,
-        };
+        };*/
 
         let mut oam_positions = Vec::new();
         let mut i = length_start + 2;
@@ -262,7 +259,7 @@ impl AnimationCel {
             oams.push(oam);
         }
 
-        Some(AnimationCel { oams, length, name: name.to_string() })
+        Some(AnimationCel { oams, name: name.to_string() })
     }
 
     pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {
@@ -331,7 +328,7 @@ impl Animation {
         Some(Animation { frames, name: name.to_string(), current_frame: 0 })
     }
 
-    pub fn get_total_frame_duration(&self, index: usize) -> usize {
+    /*pub fn get_total_frame_duration(&self, index: usize) -> usize {
         let mut result = 0;
         
         for i in 0..index {
@@ -339,7 +336,7 @@ impl Animation {
         }
 
         result
-    }
+    }*/
 
     pub fn get_total_frames(&self) -> usize {
         let mut result = 0;

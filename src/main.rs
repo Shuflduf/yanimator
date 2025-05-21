@@ -2,11 +2,10 @@ use std::{fs, time::Instant};
 use std::collections::HashMap;
 
 use eframe::egui;
-use eframe::glow::Texture;
-use egui::{include_image, menu, pos2, ColorImage, Pos2, Rect, Scene, SizeHint, TextureHandle};
+use egui::{menu, ColorImage, Rect, TextureHandle};
 use egui_extras::install_image_loaders;
 use palette_parser::Palette;
-use panels::timeline::{self, Timeline};
+use panels::timeline::Timeline;
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
@@ -24,6 +23,7 @@ fn main() -> eframe::Result {
 }
 
 #[derive(PartialEq)]
+
 enum AppState {
     AnimationEditor,
     CellEditor
@@ -33,7 +33,6 @@ struct Yanimator {
     state: AppState,
     textures: Vec<Vec<TextureHandle>>,
     animation_id: usize,
-    animation_cel_id: usize,
     palette: Palette,
     spritesheet: Spritesheet,
     
@@ -83,11 +82,21 @@ const TEST_ANIM: &str = "clappy_trio_anim.c";
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let total_time = Instant::now();
+        let mut step_time = Instant::now();
+
         // Load Palette
         let palette = Palette::from_pal(TEST_PALETTE).unwrap();
 
+        println!("Loaded palettes: {:?}", step_time.elapsed());
+        step_time = Instant::now();
+
         // Load Spritesheet and create TextureHandles
         let spritesheet = Spritesheet::from_4bpp(TEST_SPRITES).unwrap();
+
+        println!("Loaded sprites: {:?}", step_time.elapsed());
+        step_time = Instant::now();
+        
         let mut textures: Vec<Vec<TextureHandle>> =  Vec::new();
         
         for pal in palette.palettes.iter() {
@@ -130,7 +139,8 @@ impl Yanimator {
             textures.push(palette_textures);
         }
 
-        //println!("{:?}", palette.palettes);
+        println!("Created TextureHandles: {:?}", step_time.elapsed());
+        step_time = Instant::now();
         
         // Load AnimationCels
         
@@ -171,6 +181,9 @@ impl Yanimator {
             .map(|cel| (cel.name.clone(), cel))
             .collect();
         
+        println!("Loaded AnimationCels: {:?}", step_time.elapsed());
+        step_time = Instant::now();
+
         // Load Animations
 
         let test_anim_file = fs::read_to_string(TEST_ANIM).unwrap();
@@ -186,33 +199,32 @@ impl Yanimator {
         let animations = anim_positions
             .par_iter()
             .filter_map(|&start| {
-                let mut anim_str = String::new();
-                let mut anim_name = String::new();
+                let anim_name_start = start + 17;
+                let anim_name_end = test_anim_file[anim_name_start..]
+                    .find('[')
+                    .map(|pos| anim_name_start + pos)
+                    .unwrap();
 
-                for i in start + 17..test_anim_file.len() {
-                    if test_anim_file.chars().nth(i) != Some('[') {
-                        anim_name.push(test_anim_file.chars().nth(i).unwrap());
-                    } else {
-                        break;
-                    }
-                }
+                let anim_name = &test_anim_file[anim_name_start..anim_name_end];
 
-                for i in start + 17 + anim_name.len()..test_anim_file.len() {
-                    if test_anim_file.chars().nth(i) != Some(';') {
-                        anim_str.push(test_anim_file.chars().nth(i).unwrap());
-                    } else {
-                        break;
-                    }
-                }
+                let anim_str_start = anim_name_end + 1;
+                let anim_str_end = test_anim_file[anim_str_start..]
+                    .find(';')
+                    .map(|pos| anim_str_start + pos)
+                    .unwrap();
+
+                let anim_str = &test_anim_file[anim_str_start..anim_str_end];
+                
                 Animation::from_c(&anim_str, &anim_name)
             })
             .collect();
-        
+
+        println!("Loaded Animations: {:?}", step_time.elapsed());
+        println!("Total load time: {:?}", total_time.elapsed());
         Self {
             state: AppState::AnimationEditor,
             textures,
             animation_id: 0,
-            animation_cel_id: 0,
             spritesheet, 
             palette, 
             animation_cels,
@@ -228,7 +240,7 @@ impl Yanimator {
 }
 
 impl eframe::App for Yanimator {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //ctx.set_debug_on_hover(true);
         install_image_loaders(ctx);
         
@@ -250,13 +262,9 @@ impl eframe::App for Yanimator {
         
         ctx.request_repaint();
         
-        let mouse_pos = ctx.input(|i| i.pointer.hover_pos()).unwrap_or(pos2(0.0, 0.0));
-        let events = ctx.input(|i| i.events.clone());
-        
         ctx.input(|i| {
             panels::timeline::input(i, self);
         });
-
 
         egui::TopBottomPanel::top("menu")
             .show(ctx, |ui| {
@@ -306,31 +314,8 @@ impl eframe::App for Yanimator {
         
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let animation = &self.animations[self.animation_id];
-            
-            Scene::default()
-                .zoom_range(0.1..=4.0)
-                .show(ui, &mut self.viewport_rect,|ui| {
-                    match self.state {
-                        AppState::AnimationEditor => {
-                            if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
-                                animation_cel.draw(&self.textures, ui);
-                            }
-                        },
-                        AppState::CellEditor => {
-                            if let Some(animation_cel) = self.animation_cels.get_mut(&self.editing_cell) {
-                                let mut i = 0;
-                                for oam in &mut animation_cel.oams {
-                                    oam.selected = self.editing_oam == i;
-                                    i += 1;
-                                }
-                                
-                                animation_cel.draw(&self.textures, ui);
-                            }
-                        }
-                    }
-                    
-                });
+            panels::viewport::ui(ui, self)
+
 
             /*egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
                 let mut i = 0;

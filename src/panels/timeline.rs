@@ -1,4 +1,4 @@
-use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Modifiers, MouseWheelUnit, PointerButton, Pos2, Rect, Shape, Stroke, Ui, Vec2};
+use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, PointerButton, Rect, Stroke, Ui};
 
 use crate::Yanimator;
 
@@ -94,7 +94,7 @@ pub fn input(i: &InputState, app: &mut Yanimator) {
     let mouse_pos = i.pointer.hover_pos().unwrap_or(pos2(0.0, 0.0));
     for event in i.events.clone() {
         match event {
-            egui::Event::MouseWheel { unit, delta, modifiers: _ } => {
+            egui::Event::MouseWheel { unit: _, delta, modifiers: _ } => {
                 if app.timeline.rect.contains(mouse_pos) {
                     if i.modifiers.ctrl {
                         app.timeline.zoom += delta.y;

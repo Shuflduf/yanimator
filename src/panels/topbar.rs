@@ -1,4 +1,4 @@
-use egui::{include_image, vec2, ImageButton, MouseWheelUnit, Ui};
+use egui::{include_image, ImageButton, Ui};
 
 use crate::{AppState, Yanimator};
 
