@@ -2,6 +2,35 @@ use egui::Ui;
 
 use crate::{anim_parser::{OAMFlip, OAMShape, OAMSize}, Yanimator};
 
+fn get_size_string_with_shape<'a>(size: &'a OAMSize, shape: &'a OAMShape) -> &'a str {
+    match shape {
+        OAMShape::Square => {
+            match size {
+                OAMSize::Size0 => "8x8",
+                OAMSize::Size1 => "16x16",
+                OAMSize::Size2 => "32x32",
+                OAMSize::Size3 => "64x64"
+            }
+        },
+        OAMShape::Horizontal => {
+            match size {
+                OAMSize::Size0 => "16x8",
+                OAMSize::Size1 => "32x8",
+                OAMSize::Size2 => "32x16",
+                OAMSize::Size3 => "64x32"
+            }
+        },
+        OAMShape::Vertical => {
+            match size {
+                OAMSize::Size0 => "8x16",
+                OAMSize::Size1 => "8x32",
+                OAMSize::Size2 => "16x32",
+                OAMSize::Size3 => "32x64"
+            }
+        }
+    }
+}
+
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     ui.heading("Properties");
     
@@ -49,12 +78,12 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
 
             ui.label("Size");
             egui::ComboBox::from_id_salt("size_dropdown")
-                .selected_text(format!("{:?}", &mut oam.size))
+                .selected_text(format!("{}", get_size_string_with_shape(&oam.size, &oam.shape)))
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut oam.size, OAMSize::Size0, "Size0");
-                    ui.selectable_value(&mut oam.size, OAMSize::Size1, "Size1");
-                    ui.selectable_value(&mut oam.size, OAMSize::Size2, "Size2");
-                    ui.selectable_value(&mut oam.size, OAMSize::Size3, "Size3");
+                    ui.selectable_value(&mut oam.size, OAMSize::Size0, get_size_string_with_shape(&OAMSize::Size0, &oam.shape));
+                    ui.selectable_value(&mut oam.size, OAMSize::Size1, get_size_string_with_shape(&OAMSize::Size1, &oam.shape));
+                    ui.selectable_value(&mut oam.size, OAMSize::Size2, get_size_string_with_shape(&OAMSize::Size2, &oam.shape));
+                    ui.selectable_value(&mut oam.size, OAMSize::Size3, get_size_string_with_shape(&OAMSize::Size3, &oam.shape));
                 });
             ui.end_row();
 

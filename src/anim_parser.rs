@@ -196,7 +196,7 @@ impl OAM {
                     }
 
                     if self.selected {
-                        texture = texture.tint(Color32::GRAY);
+                        texture = texture.tint(Color32::LIGHT_GREEN);
                     }
                     
                     ui.add(
