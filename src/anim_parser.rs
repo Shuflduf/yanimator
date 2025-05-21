@@ -152,6 +152,19 @@ impl OAM {
         return sprite_indexes;
     }
 
+    pub fn get_sprite_indexes_one_dimensional(&self) -> Vec<usize> {
+        let two_dimensional_indexes = self.get_sprite_indexes();
+        let mut indexes = Vec::new();
+
+        for y in two_dimensional_indexes {
+            for x in y {
+                indexes.push(x);
+            }
+        }
+
+        return indexes;
+    }
+
     pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {
         let oam_sprites = self.get_sprite_indexes();
             

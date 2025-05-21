@@ -46,7 +46,8 @@ struct Yanimator {
     frames: usize,
     viewport_rect: Rect,
 
-    timeline: Timeline
+    timeline: Timeline,
+    spritesheet_palette: usize
 }
 
 /*const TEST_PALETTE: &str = "polyrhythm.pal";
@@ -234,7 +235,8 @@ impl Yanimator {
             viewport_rect: Rect::ZERO,
             timeline: Timeline::init(),
             editing_cell: String::from(""),
-            editing_oam: 0
+            editing_oam: 0,
+            spritesheet_palette: 0
         }
     }
 }
@@ -290,7 +292,10 @@ impl eframe::App for Yanimator {
         egui::TopBottomPanel::bottom("timeline")
             .resizable(true)
             .show(ctx, |ui|{
-                panels::timeline::ui(ui, self);
+                match self.state {
+                    AppState::AnimationEditor => panels::timeline::ui(ui, self),
+                    AppState::CellEditor => panels::spritesheet::ui(ui, self),
+                }
             });
         
         egui::SidePanel::left("animation_cells")
@@ -317,25 +322,7 @@ impl eframe::App for Yanimator {
             panels::viewport::ui(ui, self)
 
 
-            /*egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {
-                let mut i = 0;
-                //let mut alternate = true;
-                while i < self.textures.len() {
-                    let sprite = ui.add(egui::Image::new(
-                        &self.textures[i]).fit_to_exact_size(vec2(20.0, 20.0))
-                    );
-
-                    if sprite.hovered() {
-                        self.sprite_id = i;
-                    }
-
-                    if (i + 1) % 32 == 0 {
-                        ui.end_row();
-                    }
-
-                    i += 1;
-                }
-            });*/
+            /**/
         });
     }
 }
