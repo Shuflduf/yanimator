@@ -1,4 +1,4 @@
-use egui::{frame, pos2, vec2, Pos2, Rect, TextureHandle, Ui};
+use egui::{frame, pos2, vec2, Color32, Pos2, Rect, TextureHandle, Ui};
 
 use crate::Yanimator;
 
@@ -34,7 +34,8 @@ pub struct OAM {
     pub x: i16,
     pub y: i16,
     pub palette: usize,
-    pub tile: u16
+    pub tile: u16,
+    pub selected: bool
 }
 
 impl OAM {
@@ -91,7 +92,8 @@ impl OAM {
             x,
             y,
             palette,
-            tile
+            tile,
+            selected: false
         }
     }
 
@@ -180,6 +182,10 @@ impl OAM {
                             texture = texture.uv(Rect::from_min_max(pos2(1.0, 1.0), pos2(0.0, 0.0)));
                         },
                         _ => {}
+                    }
+
+                    if self.selected {
+                        texture = texture.tint(Color32::PLACEHOLDER);
                     }
                     
                     ui.add(

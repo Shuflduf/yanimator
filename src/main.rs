@@ -314,13 +314,17 @@ impl eframe::App for Yanimator {
                     match self.state {
                         AppState::AnimationEditor => {
                             if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
-                                //ui.heading(format!("{}", animation_cel.name));
                                 animation_cel.draw(&self.textures, ui);
                             }
                         },
                         AppState::CellEditor => {
-                            if let Some(animation_cel) = self.animation_cels.get(&self.editing_cell) {
-                                //ui.heading(format!("{}", animation_cel.name));
+                            if let Some(animation_cel) = self.animation_cels.get_mut(&self.editing_cell) {
+                                let mut i = 0;
+                                for oam in &mut animation_cel.oams {
+                                    oam.selected = self.editing_oam == i;
+                                    i += 1;
+                                }
+                                
                                 animation_cel.draw(&self.textures, ui);
                             }
                         }

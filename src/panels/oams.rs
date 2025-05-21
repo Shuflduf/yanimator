@@ -5,7 +5,7 @@ use crate::Yanimator;
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     ui.heading("OAMs");
     
-    let cell = match app.animation_cels.get(&app.editing_cell) {
+    let cell = match app.animation_cels.get_mut(&app.editing_cell) {
         Some(cell) => cell,
         None => return,
     };
