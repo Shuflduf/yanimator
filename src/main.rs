@@ -23,15 +23,25 @@ fn main() -> eframe::Result {
     eframe::run_native("Yanimator", native_options, Box::new(|cc| Ok(Box::new(Yanimator::new(cc)))))
 }
 
+#[derive(PartialEq)]
+enum AppState {
+    AnimationEditor,
+    CellEditor
+}
+
 struct Yanimator {
+    state: AppState,
     textures: Vec<Vec<TextureHandle>>,
     animation_id: usize,
     animation_cel_id: usize,
     palette: Palette,
     spritesheet: Spritesheet,
-    offset: Pos2,
-    zoom: f32,
+    
+    editing_cell: String,
+    editing_oam: usize,
     animation_cels: HashMap<String, AnimationCel>,
+    
+
     animations: Vec<Animation>,
     last_frame_time: Instant,
     frames: usize,
@@ -102,7 +112,6 @@ impl Yanimator {
                         pixels.push(rgb.b);
                         pixels.push(255);
                     }
-                    
                 }
                 
                 palette_textures.push(
@@ -200,19 +209,20 @@ impl Yanimator {
             .collect();
         
         Self {
+            state: AppState::AnimationEditor,
             textures,
             animation_id: 0,
             animation_cel_id: 0,
             spritesheet, 
             palette, 
-            offset: pos2(0.0, 0.0),
-            zoom: 20.0,
             animation_cels,
             animations,
             last_frame_time: Instant::now(),
             frames: 0,
             viewport_rect: Rect::ZERO,
-            timeline: Timeline::init()
+            timeline: Timeline::init(),
+            editing_cell: String::from(""),
+            editing_oam: 0
         }
     }
 }
@@ -247,18 +257,6 @@ impl eframe::App for Yanimator {
             panels::timeline::input(i, self);
         });
 
-        for event in events {
-            match event {
-                egui::Event::MouseMoved(pos) => {
-                    ctx.input(|i| {
-                        if i.pointer.button_down(egui::PointerButton::Secondary) {
-                            self.offset += pos;
-                        }
-                    })
-                }
-                _ => {}
-            }
-        }
 
         egui::TopBottomPanel::top("menu")
             .show(ctx, |ui| {
@@ -290,8 +288,22 @@ impl eframe::App for Yanimator {
         egui::SidePanel::left("animation_cells")
             .resizable(true)
             .show(ctx, |ui| {
-                panels::animation_cells::ui(ui, self);
+                match self.state {
+                    AppState::AnimationEditor => panels::animation_cells::ui(ui, self),
+                    AppState::CellEditor => panels::oams::ui(ui, self),
+                }
+                
             });
+        
+        if self.state == AppState::CellEditor {
+            egui::SidePanel::right("properties")
+            .resizable(true)
+            .show(ctx, |ui| {
+                panels::properties::ui(ui, self)
+            });
+        }
+
+        
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let animation = &self.animations[self.animation_id];
@@ -299,11 +311,21 @@ impl eframe::App for Yanimator {
             Scene::default()
                 .zoom_range(0.1..=4.0)
                 .show(ui, &mut self.viewport_rect,|ui| {
-                    if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
-                        //ui.heading(format!("{}", animation_cel.name));
-                        animation_cel.draw(&self.textures, ui);
-                        
+                    match self.state {
+                        AppState::AnimationEditor => {
+                            if let Some(animation_cel) = self.animation_cels.get(&animation.frames[animation.current_frame].cell) {
+                                //ui.heading(format!("{}", animation_cel.name));
+                                animation_cel.draw(&self.textures, ui);
+                            }
+                        },
+                        AppState::CellEditor => {
+                            if let Some(animation_cel) = self.animation_cels.get(&self.editing_cell) {
+                                //ui.heading(format!("{}", animation_cel.name));
+                                animation_cel.draw(&self.textures, ui);
+                            }
+                        }
                     }
+                    
                 });
 
             /*egui::Grid::new("spritesheet_grid").spacing(vec2(-20.0,0.0)).show(ui, |ui| {

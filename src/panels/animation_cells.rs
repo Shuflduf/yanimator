@@ -1,6 +1,6 @@
 use egui::{include_image, vec2, ImageButton, MouseWheelUnit, Ui};
 
-use crate::Yanimator;
+use crate::{AppState, Yanimator};
 
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     ui.heading("Animation Cells");
@@ -18,7 +18,8 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                     
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui.add(ImageButton::new(include_image!("../../assets/edit.png"))).clicked() {
-                            // Laterr
+                            app.state = AppState::CellEditor;
+                            app.editing_cell = name.clone();
                         }
                     });
                 });

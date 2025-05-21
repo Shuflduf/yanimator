@@ -3,12 +3,14 @@ use egui::{frame, pos2, vec2, Pos2, Rect, TextureHandle, Ui};
 use crate::Yanimator;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum OAMShape {
     Square,
     Horizontal,
     Vertical
 }
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum OAMSize {
     Size0,
     Size1,
@@ -16,6 +18,7 @@ pub enum OAMSize {
     Size3
 }
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum OAMFlip {
     None,
     Horizontal,
@@ -25,13 +28,13 @@ pub enum OAMFlip {
 
 #[derive(Debug)]
 pub struct OAM {
-    shape: OAMShape,
-    size: OAMSize,
-    flip: OAMFlip,
+    pub shape: OAMShape,
+    pub size: OAMSize,
+    pub flip: OAMFlip,
     pub x: i16,
     pub y: i16,
-    palette: usize,
-    tile: u16
+    pub palette: usize,
+    pub tile: u16
 }
 
 impl OAM {
@@ -193,7 +196,7 @@ impl OAM {
 pub struct AnimationCel {
     pub name: String,
     length: usize,
-    oams: Vec<OAM>
+    pub oams: Vec<OAM>
 }
 
 fn parse_hex_string(string: &str) -> Option<u8> {
