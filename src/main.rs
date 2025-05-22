@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use eframe::egui;
 use egui::{menu, ColorImage, Rect, TextureHandle};
 use egui_extras::install_image_loaders;
+use export::create_cells_bin;
 use palette_parser::Palette;
 use panels::timeline::Timeline;
 use sprite_parser::Spritesheet;
@@ -14,6 +15,7 @@ use rayon::prelude::*;
 mod palette_parser;
 mod sprite_parser;
 mod anim_parser;
+mod export;
 mod panels;
 
 fn main() -> eframe::Result {
@@ -56,10 +58,6 @@ const TEST_ANIM_CELS: &str = "polyrhythm_anim_cels.c";
 const TEST_ANIM: &str = "polyrhythm_anim.c";
 
 
-const TEST_PALETTE: &str = "night_walk.pal";
-const TEST_SPRITES: &str = "night_walk_obj.4bpp";
-const TEST_ANIM_CELS: &str = "night_walk_anim_cels.c";
-const TEST_ANIM: &str = "night_walk_anim.c";
 
 const TEST_PALETTE: &str = "samurai_slice.pal";
 const TEST_SPRITES: &str = "samurai_slice_obj.4bpp";
@@ -74,7 +72,15 @@ const TEST_ANIM: &str = "karate_man_anim.c";*/
 /*const TEST_PALETTE: &str = "tap_trial.pal";
 const TEST_SPRITES: &str = "tap_trial_obj.4bpp";
 const TEST_ANIM_CELS: &str = "tap_trial_anim_cels.c";
-const TEST_ANIM: &str = "tap_trial_anim.c";*/
+const TEST_ANIM: &str = "tap_trial_anim.c";
+
+
+
+const TEST_PALETTE: &str = "night_walk.pal";
+const TEST_SPRITES: &str = "night_walk_obj.4bpp";
+const TEST_ANIM_CELS: &str = "night_walk_anim_cels.c";
+const TEST_ANIM: &str = "night_walk_anim.c";*/
+
 
 const TEST_PALETTE: &str = "clappy_trio.pal";
 const TEST_SPRITES: &str = "clappy_trio_obj.4bpp";
@@ -155,7 +161,7 @@ impl Yanimator {
             i += pos + 7;
         }
 
-        let animation_cels = cel_positions
+        /*let animation_cels = cel_positions
             .par_iter()
             .filter_map(|&start| {
                 let mut cel_str = String::new();
@@ -182,6 +188,52 @@ impl Yanimator {
             .map(|cel| (cel.name.clone(), cel))
             .collect();
         
+        println!("Loaded AnimationCels: {:?}", step_time.elapsed());
+        step_time = Instant::now();*/
+
+        //create_cells_bin(&animation_cels);
+
+        let mut cooler_animation_cels: HashMap<String, AnimationCel> = HashMap::new();
+
+        let test_binary_cels = fs::read("cells.bin").unwrap();
+        let mut current_start_index = 0;
+        let mut current_end_index;
+        let mut name_length = 0;
+        let mut read_name = false;
+        
+        i = 0;
+
+
+        while i < test_binary_cels.len() {
+            println!("parsing byte {}", i);
+            let byte = test_binary_cels[i];
+
+            if byte == 0x00 && !read_name {
+                read_name = true;
+            }
+            i += 1;
+            name_length += 1;
+            // We are now on the cell length byte
+            if read_name {
+                println!("parsed a cell, length of oams is {}", test_binary_cels[i]);
+                current_end_index = current_start_index + name_length + test_binary_cels[i] as usize * 8 + 1;
+                
+                let cell = AnimationCel::from_bin(&test_binary_cels[current_start_index..current_end_index]);
+                if let Some(cell) = cell {
+                    cooler_animation_cels.insert(cell.name.clone(), cell);
+                }
+                
+                
+                read_name = false;
+                
+
+                name_length = 0;
+                i = current_end_index;
+                current_start_index = i;
+               
+            }
+        }
+
         println!("Loaded AnimationCels: {:?}", step_time.elapsed());
         step_time = Instant::now();
 
@@ -228,7 +280,7 @@ impl Yanimator {
             animation_id: 0,
             spritesheet, 
             palette, 
-            animation_cels,
+            animation_cels: cooler_animation_cels,
             animations,
             last_frame_time: Instant::now(),
             frames: 0,
@@ -316,13 +368,8 @@ impl eframe::App for Yanimator {
             });
         }
 
-        
-
         egui::CentralPanel::default().show(ctx, |ui| {
             panels::viewport::ui(ui, self)
-
-
-            /**/
         });
     }
 }

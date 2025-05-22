@@ -1,22 +1,19 @@
 use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {
     Square,
     Horizontal,
     Vertical
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMSize {
     Size0,
     Size1,
     Size2,
     Size3
 }
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMFlip {
     None,
     Horizontal,
@@ -29,10 +26,10 @@ pub struct OAM {
     pub shape: OAMShape,
     pub size: OAMSize,
     pub flip: OAMFlip,
-    pub x: i16,
-    pub y: i16,
+    pub x: i8,
+    pub y: i8,
     pub palette: usize,
-    pub tile: u16,
+    pub tile: usize,
     pub selected: bool
 }
 
@@ -81,18 +78,50 @@ impl OAM {
         }
         
         let palette = (word3 >> 0xc) as usize;
-        let tile = word3 & 0x0FFF;
+        let tile = (word3 & 0x0FFF) as usize;
         
         OAM {
             shape,
             size,
             flip,
-            x,
-            y,
+            x: x as i8,
+            y: y as i8,
             palette,
             tile,
             selected: false
         }
+    }
+
+    pub fn from_bin(bytes: &[u8]) -> OAM {
+        let shape = match bytes[0] {
+            0 => OAMShape::Square,
+            1 => OAMShape::Horizontal,
+            2 => OAMShape::Vertical,
+            _ => OAMShape::Square,
+        };
+
+        let size = match bytes[1] {
+            0 => OAMSize::Size0,
+            1 => OAMSize::Size1,
+            2 => OAMSize::Size2,
+            3 => OAMSize::Size3,
+            _ => OAMSize::Size0,
+        };
+
+        let flip = match bytes[2] {
+            0 => OAMFlip::None,
+            1 => OAMFlip::Horizontal,
+            2 => OAMFlip::Vertical,
+            3 => OAMFlip::Both,
+            _ => OAMFlip::None
+        };
+
+        let x = bytes[3] as i8;
+        let y = bytes[4] as i8;
+        let palette = bytes[5] as usize;
+        let tile = (((bytes[6] as usize) << 8) | (bytes[7] as usize)) as usize;
+
+        OAM {shape, size, flip, x, y, palette, tile, selected: false}
     }
 
     pub fn get_sprite_indexes(&self) -> Vec<Vec<usize>> {
@@ -143,7 +172,7 @@ impl OAM {
             let mut row: Vec<usize> = Vec::new();
             
             for &x in &x_range {
-                row.push(self.tile as usize + x + y * 32);
+                row.push(self.tile + x + y * 32);
             }
 
             sprite_indexes.push(row);
@@ -172,6 +201,8 @@ impl OAM {
 
         for y in 0..oam_sprites.len() {
             for x in 0..oam_sprites[y].len() {
+                if oam_sprites[y][x] >= textures[self.palette].len() {continue;}
+
                 let rect = egui::Rect::from_min_size(
                     pos2(
                         (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0, 
@@ -273,6 +304,32 @@ impl AnimationCel {
         }
 
         Some(AnimationCel { oams, name: name.to_string() })
+    }
+
+    pub fn from_bin(bin: &[u8]) -> Option<AnimationCel> {
+        let mut name = String::from("");
+        let mut i = 0;
+
+        while bin[i] != 0x00 {
+            name.push(bin[i] as char);
+            i += 1;
+        }
+
+        println!("Name: {}", name);
+
+        i += 1;
+
+        let length = bin[i] as usize;
+        println!("Length: {}", length);
+        let mut oams = Vec::new();
+        i += 1;
+        for x in 0..length {
+            println!("{:?}", &bin[i + (x * 8)..i + (x * 8) + 8]);
+            oams.push(OAM::from_bin(&bin[i + (x * 8)..i + (x * 8) + 8]))
+        }
+
+
+        Some(AnimationCel { name, oams })
     }
 
     pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {

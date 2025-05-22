@@ -33,6 +33,9 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             }
 
             let sprite = ui.add(texture);
+            if sprite.clicked() {
+                oam.tile = i;
+            }
 
             if (i + 1) % 32 == 0 {
                 ui.end_row();
