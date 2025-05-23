@@ -398,6 +398,41 @@ impl Animation {
         Some(Animation { frames, name: name.to_string(), current_frame: 0 })
     }
 
+    pub fn from_bin(bin: &[u8]) -> Option<Animation> {
+        let mut name = String::from("");
+        let mut i = 0;
+
+        while bin[i] != 0x00 {
+            name.push(bin[i] as char);
+            i += 1;
+        }
+
+        println!("Name: {}", name);
+        
+        // Skip over animation length
+        i += 2;
+
+        let mut frames = Vec::new();
+
+        while i < bin.len() {
+            let mut cell = String::from("");
+
+            if bin[i] != 0x00 {
+                cell.push(bin[i] as char);
+            } else {
+                i += 1; // Go to duration byte
+                frames.push(AnimationFrame {
+                    cell,
+                    duration: bin[i]
+                })
+            }
+
+            i += 1;
+        }
+
+        Some(Animation { frames, name, current_frame: 0 })
+    }
+
     /*pub fn get_total_frame_duration(&self, index: usize) -> usize {
         let mut result = 0;
         

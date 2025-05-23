@@ -3,4 +3,5 @@
 *.pal
 *.c
 *.bin
+*.yan
 .vscode

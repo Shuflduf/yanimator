@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use eframe::egui;
 use egui::{menu, ColorImage, Rect, TextureHandle};
 use egui_extras::install_image_loaders;
-use export::create_cells_bin;
+use export::create_project_bin;
 use palette_parser::Palette;
 use panels::timeline::Timeline;
 use sprite_parser::Spritesheet;
@@ -69,23 +69,23 @@ const TEST_SPRITES: &str = "karate_man_obj.4bpp";
 const TEST_ANIM_CELS: &str = "karate_man_anim_cells.inc.c";
 const TEST_ANIM: &str = "karate_man_anim.c";*/
 
-/*const TEST_PALETTE: &str = "tap_trial.pal";
+/*
+
+const TEST_PALETTE: &str = "tap_trial.pal";
 const TEST_SPRITES: &str = "tap_trial_obj.4bpp";
 const TEST_ANIM_CELS: &str = "tap_trial_anim_cels.c";
 const TEST_ANIM: &str = "tap_trial_anim.c";
-
 
 
 const TEST_PALETTE: &str = "night_walk.pal";
 const TEST_SPRITES: &str = "night_walk_obj.4bpp";
 const TEST_ANIM_CELS: &str = "night_walk_anim_cels.c";
 const TEST_ANIM: &str = "night_walk_anim.c";*/
-
-
 const TEST_PALETTE: &str = "clappy_trio.pal";
 const TEST_SPRITES: &str = "clappy_trio_obj.4bpp";
 const TEST_ANIM_CELS: &str = "clappy_trio_anim_cels.c";
 const TEST_ANIM: &str = "clappy_trio_anim.c";
+
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -150,18 +150,18 @@ impl Yanimator {
         step_time = Instant::now();
         
         // Load AnimationCels
-        
+        let mut i = 0;
         let test_cels_file = fs::read_to_string(TEST_ANIM_CELS).unwrap();
         
         let mut cel_positions = Vec::new();
-        let mut i = 0;
+        
 
         while let Some(pos) = test_cels_file[i..].find("AnimationCel ") {
             cel_positions.push(i + pos);
             i += pos + 7;
         }
 
-        /*let animation_cels = cel_positions
+        let animation_cels = cel_positions
             .par_iter()
             .filter_map(|&start| {
                 let mut cel_str = String::new();
@@ -189,19 +189,19 @@ impl Yanimator {
             .collect();
         
         println!("Loaded AnimationCels: {:?}", step_time.elapsed());
-        step_time = Instant::now();*/
+        step_time = Instant::now();
 
-        //create_cells_bin(&animation_cels);
+        
 
-        let mut cooler_animation_cels: HashMap<String, AnimationCel> = HashMap::new();
+        /*let mut cooler_animation_cels: HashMap<String, AnimationCel> = HashMap::new();
 
-        let test_binary_cels = fs::read("cells.bin").unwrap();
+        let test_binary_cels = fs::read("project.yan").unwrap();
         let mut current_start_index = 0;
         let mut current_end_index;
         let mut name_length = 0;
         let mut read_name = false;
         
-        i = 0;
+        //i = 0;
 
 
         while i < test_binary_cels.len() {
@@ -223,16 +223,13 @@ impl Yanimator {
                     cooler_animation_cels.insert(cell.name.clone(), cell);
                 }
                 
-                
                 read_name = false;
-                
 
                 name_length = 0;
                 i = current_end_index;
                 current_start_index = i;
-               
             }
-        }
+        }*/
 
         println!("Loaded AnimationCels: {:?}", step_time.elapsed());
         step_time = Instant::now();
@@ -274,13 +271,16 @@ impl Yanimator {
 
         println!("Loaded Animations: {:?}", step_time.elapsed());
         println!("Total load time: {:?}", total_time.elapsed());
+
+        create_project_bin(&animation_cels, &animations);
+
         Self {
             state: AppState::AnimationEditor,
             textures,
             animation_id: 0,
             spritesheet, 
             palette, 
-            animation_cels: cooler_animation_cels,
+            animation_cels: animation_cels,
             animations,
             last_frame_time: Instant::now(),
             frames: 0,
@@ -357,7 +357,6 @@ impl eframe::App for Yanimator {
                     AppState::AnimationEditor => panels::animation_cells::ui(ui, self),
                     AppState::CellEditor => panels::oams::ui(ui, self),
                 }
-                
             });
         
         if self.state == AppState::CellEditor {
