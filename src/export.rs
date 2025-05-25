@@ -14,7 +14,7 @@ For each animation cell:
     Animation Cell Name
     0x00 seperator byte
     Amount of OAMs (1 byte)
-
+    
     For each OAM:
         (Each OAM is 8 bytes)
         [yea, i could probably squish it back together into 6 bytes like how its actually stored]

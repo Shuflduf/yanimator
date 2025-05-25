@@ -155,13 +155,13 @@ impl Yanimator {
         
         let mut cel_positions = Vec::new();
         
-
+        
         while let Some(pos) = test_cels_file[i..].find("AnimationCel ") {
             cel_positions.push(i + pos);
             i += pos + 7;
         }
-
-        let animation_cels = cel_positions
+        
+        /*let animation_cels = cel_positions
             .par_iter()
             .filter_map(|&start| {
                 let mut cel_str = String::new();
@@ -189,36 +189,38 @@ impl Yanimator {
             .collect();
         
         println!("Loaded AnimationCels: {:?}", step_time.elapsed());
-        step_time = Instant::now();
+        step_time = Instant::now();*/
 
         
 
-        /*let mut cooler_animation_cels: HashMap<String, AnimationCel> = HashMap::new();
+        let mut cooler_animation_cels: HashMap<String, AnimationCel> = HashMap::new();
 
-        let test_binary_cels = fs::read("project.yan").unwrap();
-        let mut current_start_index = 0;
+        let test_project = fs::read("project.yan").unwrap();
+        let mut current_start_index = 7;
         let mut current_end_index;
         let mut name_length = 0;
         let mut read_name = false;
         
-        //i = 0;
-
-
-        while i < test_binary_cels.len() {
+        i = 7;
+        
+        let animations_offset: u32 = ((test_project[3] as u32) << 24) | ((test_project[4] as u32) << 16) | ((test_project[5] as u32) << 8) | test_project[6] as u32;
+        
+        while i < animations_offset as usize {
             println!("parsing byte {}", i);
-            let byte = test_binary_cels[i];
-
+            let byte = test_project[i];
+            
             if byte == 0x00 && !read_name {
                 read_name = true;
             }
+
             i += 1;
             name_length += 1;
             // We are now on the cell length byte
             if read_name {
-                println!("parsed a cell, length of oams is {}", test_binary_cels[i]);
-                current_end_index = current_start_index + name_length + test_binary_cels[i] as usize * 8 + 1;
+                println!("parsed a cell, length of oams is {}", test_project[i]);
+                current_end_index = current_start_index + name_length + test_project[i] as usize * 8 + 1;
                 
-                let cell = AnimationCel::from_bin(&test_binary_cels[current_start_index..current_end_index]);
+                let cell = AnimationCel::from_bin(&test_project[current_start_index..current_end_index]);
                 if let Some(cell) = cell {
                     cooler_animation_cels.insert(cell.name.clone(), cell);
                 }
@@ -229,14 +231,52 @@ impl Yanimator {
                 i = current_end_index;
                 current_start_index = i;
             }
-        }*/
+        }
 
         println!("Loaded AnimationCels: {:?}", step_time.elapsed());
         step_time = Instant::now();
 
         // Load Animations
+        
+        let mut animations = Vec::new();
+        
+        while i < test_project.len() {
+            let byte = test_project[i];
+            
+            if byte == 0x00 && !read_name {
+                read_name = true;
+            }
+            
+            i += 1;
+            name_length += 1;
 
-        let test_anim_file = fs::read_to_string(TEST_ANIM).unwrap();
+            // We are now on the animation byte length
+
+            if read_name {
+                let upper_byte = test_project[i];
+                i += 1;
+                let lower_byte = test_project[i];
+                let animation_length = (((upper_byte as u16) << 8) | lower_byte as u16) as usize;
+                
+                println!("length: {}", animation_length);
+                
+                current_end_index = current_start_index + name_length + animation_length + 2;
+                
+                let animation = Animation::from_bin(&test_project[current_start_index..current_end_index]);
+                
+                if let Some(animation) = animation {
+                    animations.push(animation);
+                }
+                
+                read_name = false;
+                
+                name_length = 0;
+                i = current_end_index;
+                current_start_index = i;
+            }
+        }
+        
+        /*let test_anim_file = fs::read_to_string(TEST_ANIM).unwrap();
 
         let mut anim_positions = Vec::new();
         i = 0;
@@ -272,7 +312,9 @@ impl Yanimator {
         println!("Loaded Animations: {:?}", step_time.elapsed());
         println!("Total load time: {:?}", total_time.elapsed());
 
-        create_project_bin(&animation_cels, &animations);
+        create_project_bin(&animation_cels, &animations);*/
+        
+        
 
         Self {
             state: AppState::AnimationEditor,
@@ -280,7 +322,7 @@ impl Yanimator {
             animation_id: 0,
             spritesheet, 
             palette, 
-            animation_cels: animation_cels,
+            animation_cels: cooler_animation_cels,
             animations,
             last_frame_time: Instant::now(),
             frames: 0,

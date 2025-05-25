@@ -6,7 +6,7 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 
 ### Exporting/Saving
 
-- [ ] Put animations in the `cells.bin` so it can be renamed something like `(project name).yan` for easier sharing
+- [x] Put animations in the `cells.bin` so it can be renamed something like `(project name).yan` for easier sharing
 - [ ] Export animation cells to a `_anim_cels.c` file
 - [ ] Export animations to a `_anim.c` file
 

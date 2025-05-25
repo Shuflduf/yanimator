@@ -410,23 +410,26 @@ impl Animation {
         println!("Name: {}", name);
         
         // Skip over animation length
-        i += 2;
+        i += 3;
 
         let mut frames = Vec::new();
-
+        let mut cell = String::from("");
         while i < bin.len() {
-            let mut cell = String::from("");
-
+            
             if bin[i] != 0x00 {
                 cell.push(bin[i] as char);
+                println!("character in name: {}, its now {}", bin[i], cell);
             } else {
+                println!("cell name: {}", cell);
                 i += 1; // Go to duration byte
                 frames.push(AnimationFrame {
                     cell,
                     duration: bin[i]
-                })
-            }
+                });
 
+                cell = String::from("");
+            }
+            
             i += 1;
         }
 
@@ -449,7 +452,7 @@ impl Animation {
         for frame in &self.frames {
             result += frame.duration as usize;
         }
-
+        
         result
     }
     
