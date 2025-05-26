@@ -39,7 +39,7 @@ For each animation:
         Frame duration (1 byte)
 */
 
-pub fn create_project_bin(animation_cells: &HashMap<String, AnimationCel>, animations: &Vec<Animation>) {
+pub fn create_project_bin(path: &str, animation_cells: &HashMap<String, AnimationCel>, animations: &Vec<Animation>) {
     let mut bytes: Vec<u8> = Vec::new();
 
     bytes.extend(String::from("YAN").as_bytes().to_vec());
@@ -101,7 +101,7 @@ pub fn create_project_bin(animation_cells: &HashMap<String, AnimationCel>, anima
         bytes[start_length - 1] = (length & 0xFF) as u8;
     }
 
-    let export = fs::File::create("project.yan");
+    let export = fs::File::create(path);
     
     if let Ok(mut file) = export {
         let _ = file.write_all(&bytes);

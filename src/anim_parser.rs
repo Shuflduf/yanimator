@@ -1,4 +1,4 @@
-use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
+use egui::{pos2, vec2, Color32, Rect, Response, TextureHandle, Ui};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {
@@ -198,10 +198,14 @@ impl OAM {
         let oam_sprites = self.get_sprite_indexes();
             
         let sprite_size = 20.0;
-
         for y in 0..oam_sprites.len() {
             for x in 0..oam_sprites[y].len() {
-                if oam_sprites[y][x] >= textures[self.palette].len() {continue;}
+                let texture_sheet = match textures.get(self.palette) {
+                    Some(texture) => texture,
+                    None => continue
+                };
+
+                if oam_sprites[y][x] >= texture_sheet.len() {continue;}
 
                 let rect = egui::Rect::from_min_size(
                     pos2(
@@ -210,8 +214,14 @@ impl OAM {
                     vec2(sprite_size, sprite_size)
                 );
                 
+                let source = match texture_sheet.get(oam_sprites[y][x]) {
+                    Some(source) => source,
+                    None => continue
+                };
+
                 ui.put(rect, |ui: &mut Ui| {
-                    let mut texture = egui::Image::new(&textures[self.palette][oam_sprites[y][x]]);
+                    
+                    let mut texture = egui::Image::new(source);
                     
                     match self.flip { 
                         OAMFlip::Horizontal => {

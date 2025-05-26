@@ -5,3 +5,4 @@ pub mod oams;
 pub mod properties;
 pub mod viewport;
 pub mod spritesheet;
+pub mod menu_bar;

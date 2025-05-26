@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use eframe::egui;
 use egui::{menu, ColorImage, Rect, TextureHandle};
 use egui_extras::install_image_loaders;
-use export::create_project_bin;
 use palette_parser::Palette;
 use panels::timeline::Timeline;
 use sprite_parser::Spritesheet;
@@ -47,7 +46,7 @@ struct Yanimator {
     last_frame_time: Instant,
     frames: usize,
     viewport_rect: Rect,
-
+    
     timeline: Timeline,
     spritesheet_palette: usize
 }
@@ -89,192 +88,107 @@ const TEST_ANIM: &str = "clappy_trio_anim.c";
 
 impl Yanimator {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let total_time = Instant::now();
-        let mut step_time = Instant::now();
-
-        // Load Palette
-        let palette = Palette::from_pal(TEST_PALETTE).unwrap();
-
-        println!("Loaded palettes: {:?}", step_time.elapsed());
-        step_time = Instant::now();
-
-        // Load Spritesheet and create TextureHandles
-        let spritesheet = Spritesheet::from_4bpp(TEST_SPRITES).unwrap();
-
-        println!("Loaded sprites: {:?}", step_time.elapsed());
-        step_time = Instant::now();
+        // let total_time = Instant::now();
+        // let mut step_time = Instant::now();
         
-        let mut textures: Vec<Vec<TextureHandle>> =  Vec::new();
+        // // Load Palette
+        // let palette = Palette::from_pal(TEST_PALETTE).unwrap();
         
-        for pal in palette.palettes.iter() {
-            let mut palette_textures = Vec::new();
+        // println!("Loaded palettes: {:?}", step_time.elapsed());
+        // step_time = Instant::now();
+        
+        // // Load Spritesheet and create TextureHandles
+        // let spritesheet = Spritesheet::from_4bpp(TEST_SPRITES).unwrap();
 
-            for i in 0..spritesheet.sprites.len() {
-                let sprite = &spritesheet.sprites[i];
-                let mut pixels: Vec<u8> = Vec::new();
+        // println!("Loaded sprites: {:?}", step_time.elapsed());
+        // step_time = Instant::now();
+        
+        // let mut textures: Vec<Vec<TextureHandle>> =  Vec::new();
+        
+        // for pal in palette.palettes.iter() {
+        //     let mut palette_textures = Vec::new();
+
+        //     for i in 0..spritesheet.sprites.len() {
+        //         let sprite = &spritesheet.sprites[i];
+        //         let mut pixels: Vec<u8> = Vec::new();
             
-                for i in 0..0x40 {
-                    let palette_id = sprite.pixels[i];
+        //         for i in 0..0x40 {
+        //             let palette_id = sprite.pixels[i];
                     
-                    if palette_id == 0 {
-                        pixels.push(0);
-                        pixels.push(0);
-                        pixels.push(0);
-                        pixels.push(0);
-                    } else {
-                        let rgb = &pal[palette_id as usize];
-                        pixels.push(rgb.r);
-                        pixels.push(rgb.g);
-                        pixels.push(rgb.b);
-                        pixels.push(255);
-                    }
-                }
+        //             if palette_id == 0 {
+        //                 pixels.push(0);
+        //                 pixels.push(0);
+        //                 pixels.push(0);
+        //                 pixels.push(0);
+        //             } else {
+        //                 let rgb = &pal[palette_id as usize];
+        //                 pixels.push(rgb.r);
+        //                 pixels.push(rgb.g);
+        //                 pixels.push(rgb.b);
+        //                 pixels.push(255);
+        //             }
+        //         }
                 
-                palette_textures.push(
-                    cc.egui_ctx.load_texture(
-                    i.to_string(),
-                    ColorImage::from_rgba_unmultiplied([8, 8], &pixels), 
-                    egui::TextureOptions {
-                        magnification: egui::TextureFilter::Nearest,
-                        minification: egui::TextureFilter::Nearest,
-                        wrap_mode: egui::TextureWrapMode::Repeat,
-                        mipmap_mode: None,
-                    })
-                )
-            }
+        //         palette_textures.push(
+        //             cc.egui_ctx.load_texture(
+        //             i.to_string(),
+        //             ColorImage::from_rgba_unmultiplied([8, 8], &pixels), 
+        //             egui::TextureOptions {
+        //                 magnification: egui::TextureFilter::Nearest,
+        //                 minification: egui::TextureFilter::Nearest,
+        //                 wrap_mode: egui::TextureWrapMode::Repeat,
+        //                 mipmap_mode: None,
+        //             })
+        //         )
+        //     }
 
-            textures.push(palette_textures);
-        }
+        //     textures.push(palette_textures);
+        // }
 
-        println!("Created TextureHandles: {:?}", step_time.elapsed());
-        step_time = Instant::now();
+        // println!("Created TextureHandles: {:?}", step_time.elapsed());
+        // step_time = Instant::now();
         
-        // Load AnimationCels
-        let mut i = 0;
-        let test_cels_file = fs::read_to_string(TEST_ANIM_CELS).unwrap();
+        // // Load AnimationCels
+        // let mut i = 0;
+        // let test_cels_file = fs::read_to_string(TEST_ANIM_CELS).unwrap();
         
-        let mut cel_positions = Vec::new();
+        // let mut cel_positions = Vec::new();
         
         
-        while let Some(pos) = test_cels_file[i..].find("AnimationCel ") {
-            cel_positions.push(i + pos);
-            i += pos + 7;
-        }
+        // while let Some(pos) = test_cels_file[i..].find("AnimationCel ") {
+        //     cel_positions.push(i + pos);
+        //     i += pos + 7;
+        // }
         
-        /*let animation_cels = cel_positions
-            .par_iter()
-            .filter_map(|&start| {
-                let mut cel_str = String::new();
-                let mut cel_name = String::new();
+        // let animation_cels = cel_positions
+        //     .par_iter()
+        //     .filter_map(|&start| {
+        //         let mut cel_str = String::new();
+        //         let mut cel_name = String::new();
 
-                for i in start + 13..test_cels_file.len() {
-                    if test_cels_file.chars().nth(i) != Some('[') {
-                        cel_name.push(test_cels_file.chars().nth(i).unwrap());
-                    } else {
-                        break;
-                    }
-                }
+        //         for i in start + 13..test_cels_file.len() {
+        //             if test_cels_file.chars().nth(i) != Some('[') {
+        //                 cel_name.push(test_cels_file.chars().nth(i).unwrap());
+        //             } else {
+        //                 break;
+        //             }
+        //         }
 
-                for i in start + 13 + cel_name.len()..test_cels_file.len() {
-                    if test_cels_file.chars().nth(i) != Some(';') {
-                        cel_str.push(test_cels_file.chars().nth(i).unwrap());
-                    } else {
-                        break;
-                    }
-                }
+        //         for i in start + 13 + cel_name.len()..test_cels_file.len() {
+        //             if test_cels_file.chars().nth(i) != Some(';') {
+        //                 cel_str.push(test_cels_file.chars().nth(i).unwrap());
+        //             } else {
+        //                 break;
+        //             }
+        //         }
 
-                AnimationCel::from_c(&cel_str, &cel_name)
-            })
-            .map(|cel| (cel.name.clone(), cel))
-            .collect();
+        //         AnimationCel::from_c(&cel_str, &cel_name)
+        //     })
+        //     .map(|cel| (cel.name.clone(), cel))
+        //     .collect();
         
-        println!("Loaded AnimationCels: {:?}", step_time.elapsed());
-        step_time = Instant::now();*/
-
-        
-
-        let mut cooler_animation_cels: HashMap<String, AnimationCel> = HashMap::new();
-
-        let test_project = fs::read("project.yan").unwrap();
-        let mut current_start_index = 7;
-        let mut current_end_index;
-        let mut name_length = 0;
-        let mut read_name = false;
-        
-        i = 7;
-        
-        let animations_offset: u32 = ((test_project[3] as u32) << 24) | ((test_project[4] as u32) << 16) | ((test_project[5] as u32) << 8) | test_project[6] as u32;
-        
-        while i < animations_offset as usize {
-            println!("parsing byte {}", i);
-            let byte = test_project[i];
-            
-            if byte == 0x00 && !read_name {
-                read_name = true;
-            }
-
-            i += 1;
-            name_length += 1;
-            // We are now on the cell length byte
-            if read_name {
-                println!("parsed a cell, length of oams is {}", test_project[i]);
-                current_end_index = current_start_index + name_length + test_project[i] as usize * 8 + 1;
-                
-                let cell = AnimationCel::from_bin(&test_project[current_start_index..current_end_index]);
-                if let Some(cell) = cell {
-                    cooler_animation_cels.insert(cell.name.clone(), cell);
-                }
-                
-                read_name = false;
-
-                name_length = 0;
-                i = current_end_index;
-                current_start_index = i;
-            }
-        }
-
-        println!("Loaded AnimationCels: {:?}", step_time.elapsed());
-        step_time = Instant::now();
-
-        // Load Animations
-        
-        let mut animations = Vec::new();
-        
-        while i < test_project.len() {
-            let byte = test_project[i];
-            
-            if byte == 0x00 && !read_name {
-                read_name = true;
-            }
-            
-            i += 1;
-            name_length += 1;
-
-            // We are now on the animation byte length
-
-            if read_name {
-                let upper_byte = test_project[i];
-                i += 1;
-                let lower_byte = test_project[i];
-                let animation_length = (((upper_byte as u16) << 8) | lower_byte as u16) as usize;
-                
-                println!("length: {}", animation_length);
-                
-                current_end_index = current_start_index + name_length + animation_length + 2;
-                
-                let animation = Animation::from_bin(&test_project[current_start_index..current_end_index]);
-                
-                if let Some(animation) = animation {
-                    animations.push(animation);
-                }
-                
-                read_name = false;
-                
-                name_length = 0;
-                i = current_end_index;
-                current_start_index = i;
-            }
-        }
+        // println!("Loaded AnimationCels: {:?}", step_time.elapsed());
+        // step_time = Instant::now();
         
         /*let test_anim_file = fs::read_to_string(TEST_ANIM).unwrap();
 
@@ -285,7 +199,7 @@ impl Yanimator {
             anim_positions.push(i + pos);
             i += pos + 17;
         }
-
+        
         let animations = anim_positions
             .par_iter()
             .filter_map(|&start| {
@@ -302,7 +216,7 @@ impl Yanimator {
                     .find(';')
                     .map(|pos| anim_str_start + pos)
                     .unwrap();
-
+                
                 let anim_str = &test_anim_file[anim_str_start..anim_str_end];
                 
                 Animation::from_c(&anim_str, &anim_name)
@@ -311,10 +225,14 @@ impl Yanimator {
 
         println!("Loaded Animations: {:?}", step_time.elapsed());
         println!("Total load time: {:?}", total_time.elapsed());
-
+        
         create_project_bin(&animation_cels, &animations);*/
         
-        
+        let textures = Vec::new();
+        let spritesheet = Spritesheet { sprites: Vec::new() };
+        let palette = Palette { palettes: Vec::new() };
+        let animation_cels = HashMap::new();
+        let animations = Vec::new();
 
         Self {
             state: AppState::AnimationEditor,
@@ -322,7 +240,7 @@ impl Yanimator {
             animation_id: 0,
             spritesheet, 
             palette, 
-            animation_cels: cooler_animation_cels,
+            animation_cels,
             animations,
             last_frame_time: Instant::now(),
             frames: 0,
@@ -348,13 +266,16 @@ impl eframe::App for Yanimator {
             self.last_frame_time = now;
         }
         
-        let animation = &mut self.animations[self.animation_id];
+        let animation = self.animations.get_mut(self.animation_id);
         
-        if self.frames == animation.get_total_frames() {
-            self.frames = 0;
+        if let Some(animation) = animation {
+            if self.frames == animation.get_total_frames() {
+                self.frames = 0;
+            }
+            
+            animation.current_frame = animation.get_anim_frame_from_frames(self.frames);
         }
         
-        animation.current_frame = animation.get_anim_frame_from_frames(self.frames);
         
         ctx.request_repaint();
         
@@ -364,18 +285,7 @@ impl eframe::App for Yanimator {
 
         egui::TopBottomPanel::top("menu")
             .show(ctx, |ui| {
-                // Use the menu_bar function here
-                menu::bar(ui, |ui| {
-                    ui.menu_button("File", |ui| {
-                        if ui.button("New Project [Ctrl+N]").clicked() {
-                            // Blahh
-                        }
-                        
-                        if ui.button("Open Project [Ctrl+O]").clicked() {
-                            // Blahh
-                        }
-                    });
-                });
+                panels::menu_bar::ui(ui, self);
             });
 
         egui::TopBottomPanel::top("topbar")

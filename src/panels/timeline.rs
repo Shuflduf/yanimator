@@ -56,8 +56,6 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
 
         for i in 0..100 {
             if i % 10 != 0 { continue; }
-            
-            
 
             ui.painter().line_segment(
                 [
@@ -75,18 +73,21 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         }
         
         let mut pos: f32 = 0.0;
+
+        let animation = app.animations.get_mut(app.animation_id);
         
-        for frame in &app.animations[app.animation_id].frames {
-            ui.put(egui::Rect::from_min_size(
-                pos2(pos * app.timeline.zoom + app.timeline.scroll, ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0), vec2(KEYFRAME_SIZE, KEYFRAME_SIZE)
-            ), |ui: &mut Ui| {
-                ui.add(Image::new(include_image!("../../assets/keyframe.png")))
-            }).on_hover_text(frame.cell.clone());
-            pos += frame.duration as f32;
+        if let Some(animation) = animation {
+            for frame in &animation.frames {
+                ui.put(egui::Rect::from_min_size(
+                    pos2(pos * app.timeline.zoom + app.timeline.scroll, ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0), vec2(KEYFRAME_SIZE, KEYFRAME_SIZE)
+                ), |ui: &mut Ui| {
+                    ui.add(Image::new(include_image!("../../assets/keyframe.png")))
+                }).on_hover_text(frame.cell.clone());
+                pos += frame.duration as f32;
+            }
         }
     });
-
-
+    
     ui.add_space(ui.available_height());
 }
 

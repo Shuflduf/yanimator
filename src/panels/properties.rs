@@ -61,9 +61,19 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             ui.label("Tile ID");
             ui.add(egui::DragValue::new(&mut oam.tile).speed(0.2).range(0..=app.spritesheet.sprites.len()));
             ui.end_row();
-
+            
             ui.label("Palette ID");
-            ui.add(egui::DragValue::new(&mut oam.palette).speed(0.2).range(0..=app.palette.palettes.len() - 1));
+            
+            // the world would be a perfect place
+            // if these drag value ranged didnt have to be inclusive
+            
+            let mut upper_range = app.palette.palettes.len();
+            
+            if upper_range > 0 {
+                upper_range -= 1;
+            }
+            
+            ui.add(egui::DragValue::new(&mut oam.palette).speed(0.2).range(0..=upper_range));
             ui.end_row();
             
             ui.label("Shape");
