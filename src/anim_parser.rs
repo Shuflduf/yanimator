@@ -325,16 +325,12 @@ impl AnimationCel {
             i += 1;
         }
 
-        println!("Name: {}", name);
-
         i += 1;
 
         let length = bin[i] as usize;
-        println!("Length: {}", length);
         let mut oams = Vec::new();
         i += 1;
         for x in 0..length {
-            println!("{:?}", &bin[i + (x * 8)..i + (x * 8) + 8]);
             oams.push(OAM::from_bin(&bin[i + (x * 8)..i + (x * 8) + 8]))
         }
 
@@ -416,8 +412,6 @@ impl Animation {
             name.push(bin[i] as char);
             i += 1;
         }
-
-        println!("Name: {}", name);
         
         // Skip over animation length
         i += 3;
@@ -428,9 +422,7 @@ impl Animation {
             
             if bin[i] != 0x00 {
                 cell.push(bin[i] as char);
-                println!("character in name: {}, its now {}", bin[i], cell);
             } else {
-                println!("cell name: {}", cell);
                 i += 1; // Go to duration byte
                 frames.push(AnimationFrame {
                     cell,

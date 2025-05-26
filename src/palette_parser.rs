@@ -13,11 +13,6 @@ pub struct Palette {
 
 impl Palette {
     pub fn from_pal(file_path: &str) -> Result<Palette, std::io::Error> {
-        // TODO: this will only read the first row of colors for now, implement other
-        // rows of palette colors later
-        
-        
-
         let bytes = fs::read(file_path)?;
         let mut palettes = Vec::new();
 

@@ -1,8 +1,7 @@
 use std::{collections::HashMap, fs, path::PathBuf};
 
-use eframe::glow::PATCH_VERTICES;
 use egui::{menu, Button, ColorImage, Key, KeyboardShortcut, Modifiers, TextureHandle, Ui};
-use image::open;
+use rayon::prelude::*;
 
 use crate::{anim_parser::{Animation, AnimationCel}, palette_parser::Palette, sprite_parser::Spritesheet, Yanimator};
 use rfd::FileDialog;
@@ -215,6 +214,94 @@ fn load_texture_handles(ui: &mut Ui, app: &mut Yanimator) {
     app.textures = textures;
 }
 
+fn load_animation_cels(app: &mut Yanimator) {
+    let file_path: PathBuf = match FileDialog::new()
+    .add_filter("C", &["c"])
+    .set_directory("/")
+    .set_title("Select Animation Cels")
+    .pick_file() {
+        Some(file) => file,
+        None => return
+    };
+    
+    let path_str = match file_path.to_str() {
+        Some(path) => path,
+        None => return
+    };
+
+    let mut i = 0;
+    let cels_file = fs::read_to_string(path_str).unwrap();
+
+    let mut cel_positions = Vec::new();
+
+
+    while let Some(pos) = cels_file[i..].find("AnimationCel ") {
+        cel_positions.push(i + pos + 13);
+        i += pos + 7;
+    }
+
+    let animation_cels = cel_positions
+        .par_iter()
+        .filter_map(|&start| {
+            let sliced_cel = &cels_file[start..];
+            let cel_name_end = sliced_cel.find('[')?;
+            let cel_name = &sliced_cel[..cel_name_end];
+
+            let cel_str_start = cel_name_end + 1;
+            let cel_str_end = sliced_cel[cel_str_start..].find(';')?;
+            let cel_str = &sliced_cel[cel_str_start..cel_str_start + cel_str_end];
+
+            AnimationCel::from_c(cel_str, cel_name)
+        })
+        .map(|cel| (cel.name.clone(), cel))
+        .collect();
+
+    app.animation_cels = animation_cels;
+}
+
+fn load_animations(app: &mut Yanimator) {
+    let file_path: PathBuf = match FileDialog::new()
+    .add_filter("C", &["c"])
+    .set_directory("/")
+    .set_title("Select Animations")
+    .pick_file() {
+        Some(file) => file,
+        None => return
+    };
+    
+    let path_str = match file_path.to_str() {
+        Some(path) => path,
+        None => return
+    };
+
+    let anim_file = fs::read_to_string(path_str).unwrap();
+
+    let mut anim_positions = Vec::new();
+    let mut i = 0;
+
+    while let Some(pos) = anim_file[i..].find("struct Animation ") {
+        anim_positions.push(i + pos + 17);
+        i += pos + 17;
+    }
+    
+    let animations = anim_positions
+        .par_iter()
+        .filter_map(|&start| {
+            let sliced_anim = &anim_file[start..];
+            let anim_name_end = sliced_anim.find('[')?;
+            let anim_name = &sliced_anim[..anim_name_end];
+
+            let anim_str_start = anim_name_end + 1;
+            let anim_str_end = sliced_anim[anim_str_start..].find(';')?;
+            let anim_str = &sliced_anim[anim_str_start..anim_str_start + anim_str_end];
+            
+            Animation::from_c(&anim_str, &anim_name)
+        })
+        .collect();
+
+    app.animations = animations;
+}
+
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     menu::bar(ui, |ui| {
         ui.menu_button("File", |ui| {
@@ -241,11 +328,11 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             }
             
             if ui.button("Load Animation Cells (.c)").clicked() {
-                // Blahh
+                load_animation_cels(app);
             }
 
             if ui.button("Load Animations (.c)").clicked() {
-                // Blahh
+                load_animations(app);
             }
         });
     });
