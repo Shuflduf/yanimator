@@ -1,8 +1,8 @@
-use std::{fs, time::Instant};
+use std::time::Instant;
 use std::collections::HashMap;
 
 use eframe::egui;
-use egui::{menu, ColorImage, Rect, TextureHandle};
+use egui::{Rect, TextureHandle};
 use egui_extras::install_image_loaders;
 use palette_parser::Palette;
 use panels::timeline::Timeline;
@@ -16,6 +16,7 @@ mod sprite_parser;
 mod anim_parser;
 mod export;
 mod panels;
+mod import;
 
 fn main() -> eframe::Result {
     
@@ -52,7 +53,7 @@ struct Yanimator {
 }
 
 impl Yanimator {
-    fn new(cc: &eframe::CreationContext<'_>) -> Self {             
+    fn new(_cc: &eframe::CreationContext<'_>) -> Self {             
         let textures = Vec::new();
         let spritesheet = Spritesheet { sprites: Vec::new() };
         let palette = Palette { palettes: Vec::new() };

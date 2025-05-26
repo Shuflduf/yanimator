@@ -1,4 +1,4 @@
-use egui::{pos2, vec2, Color32, Rect, Response, TextureHandle, Ui};
+use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {

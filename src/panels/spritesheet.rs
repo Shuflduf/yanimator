@@ -1,4 +1,4 @@
-use egui::{epaint::text, vec2, Color32, Ui};
+use egui::{vec2, Color32, Ui};
 
 use crate::Yanimator;
 
