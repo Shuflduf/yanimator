@@ -31,3 +31,10 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 ### QoL stuff
 
 - [ ] Preview of AnimationCells and OAMs in side panel, and maybe in timeline too (something like paint.net's layers window)
+
+# Attributions
+
+Icons used are from [FamFamFamSilkIcons](http://www.famfamfam.com/lab/icons/silk/) by Mark James, licensed under a [Creative Commons Attribution 2.5 License.](https://creativecommons.org/licenses/by/2.5/)
+
+
+(...yea, the link is dead because this icon pack is ancient, i got the icons from [here](https://github.com/legacy-icons/famfamfam-silk))

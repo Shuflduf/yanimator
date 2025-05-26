@@ -1,6 +1,6 @@
 use std::{path::PathBuf};
 
-use egui::{menu, Button, ColorImage, Key, KeyboardShortcut, Modifiers, TextureHandle, Ui};
+use egui::{include_image, menu, Button, ColorImage, Key, KeyboardShortcut, Modifiers, TextureHandle, Ui};
 
 
 use crate::{import, palette_parser::Palette, sprite_parser::Spritesheet, Yanimator};
@@ -175,33 +175,33 @@ fn load_animations(app: &mut Yanimator) {
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     menu::bar(ui, |ui| {
         ui.menu_button("File", |ui| {
-            if ui.add(Button::new("New Project").shortcut_text(ui.ctx().format_shortcut(&NEW_PROJECT))).clicked() {
+            if ui.add(Button::image_and_text(include_image!("../../assets/page_add.png"), "New Project").shortcut_text(ui.ctx().format_shortcut(&NEW_PROJECT))).clicked() {
                 // Blahh
             }
             
-            if ui.add(Button::new("Open Project").shortcut_text(ui.ctx().format_shortcut(&OPEN_PROJECT))).clicked() {
+            if ui.add(Button::image_and_text(include_image!("../../assets/folder_page.png"), "Open Project").shortcut_text(ui.ctx().format_shortcut(&OPEN_PROJECT))).clicked() {
                 open_project(app);
             }
             
-            if ui.add(Button::new("Save Project").shortcut_text(ui.ctx().format_shortcut(&SAVE_PROJECT))).clicked() {
+            if ui.add(Button::image_and_text(include_image!("../../assets/page_save.png"), "Save Project").shortcut_text(ui.ctx().format_shortcut(&SAVE_PROJECT))).clicked() {
                 save_project(app);
             }
 
             ui.separator();
 
-            if ui.button("Load Spritesheet (.4bpp)").clicked() {
+            if ui.add(Button::image_and_text(include_image!("../../assets/picture_add.png"), "Load Spritesheet (.4bpp)")).clicked() {
                 load_spritesheet(ui, app);
             }
-
-            if ui.button("Load Palette (.pal)").clicked() {
+            
+            if ui.add(Button::image_and_text(include_image!("../../assets/palette.png"), "Load Palette (.pal)")).clicked() {
                 load_palette(ui, app);
             }
             
-            if ui.button("Load Animation Cells (.c)").clicked() {
+            if ui.add(Button::image_and_text(include_image!("../../assets/film.png"), "Load Animation Cels (.c)")).clicked() {
                 load_animation_cels(app);
             }
 
-            if ui.button("Load Animations (.c)").clicked() {
+            if ui.add(Button::image_and_text(include_image!("../../assets/television.png"), "Load Animations (.c)")).clicked() {
                 load_animations(app);
             }
         });
