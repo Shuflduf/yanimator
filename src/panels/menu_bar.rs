@@ -3,7 +3,7 @@ use std::{path::PathBuf};
 use egui::{include_image, menu, Button, ColorImage, Key, KeyboardShortcut, Modifiers, TextureHandle, Ui};
 
 
-use crate::{import, palette_parser::Palette, sprite_parser::Spritesheet, Yanimator};
+use crate::{export, import, palette_parser::Palette, sprite_parser::Spritesheet, Yanimator};
 use rfd::FileDialog;
 
 const NEW_PROJECT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::CTRL, Key::N);
@@ -172,6 +172,24 @@ fn load_animations(app: &mut Yanimator) {
     app.animations = import::load_animations_from_c(path_str);
 }
 
+fn export_animation_cels(app: &mut Yanimator) {
+    let file_path: PathBuf = match FileDialog::new()
+    .add_filter("C", &["c"])
+    .set_directory("/")
+    .set_title("Select export location")
+    .save_file() {
+        Some(file) => file,
+        None => return
+    };
+
+    let path_str = match file_path.to_str() {
+        Some(path) => path,
+        None => return
+    };
+
+    export::export_animation_cels(path_str, &app.animation_cels);
+}
+
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     menu::bar(ui, |ui| {
         ui.menu_button("File", |ui| {
@@ -203,6 +221,16 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
 
             if ui.add(Button::image_and_text(include_image!("../../assets/television.png"), "Load Animations (.c)")).clicked() {
                 load_animations(app);
+            }
+
+            ui.separator();
+
+            if ui.add(Button::image_and_text(include_image!("../../assets/film_save.png"), "Export Animation Cels (.c)")).clicked() {
+                export_animation_cels(app);
+            }
+
+            if ui.add(Button::image_and_text(include_image!("../../assets/film_save.png"), "Export Animations (.c)")).clicked() {
+                // Blah
             }
         });
     });

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, io::Write};
 
-use crate::anim_parser::{Animation, AnimationCel};
+use crate::anim_parser::{Animation, AnimationCel, OAMFlip, OAMShape, OAMSize};
 
 /*
     
@@ -105,7 +105,80 @@ pub fn create_project_bin(path: &str, animation_cells: &HashMap<String, Animatio
     
     if let Ok(mut file) = export {
         let _ = file.write_all(&bytes);
+    }    
+}
+
+pub fn export_animation_cels(path: &str, animation_cells: &HashMap<String, AnimationCel>) {
+    let mut export = String::from("// Exported by Yanimator");
+
+    for (name, cell) in animation_cells {
+        export.push_str(&format!("\n\nAnimationCel {}[] = {{\n", name));
+        export.push_str(&format!("      /* Len */ {},\n", cell.oams.len()));
+
+        let mut i = 0;
+
+        for oam in &cell.oams {
+            export.push_str(&format!("      /* {:0fill$} */ ", i, fill = 3));
+            let shape: u16 = match oam.shape {
+                OAMShape::Square => 0x0000,
+                OAMShape::Horizontal => 0x4000,
+                OAMShape::Vertical => 0x8000
+            };
+
+            let mut y = oam.y as i16;
+            if y < 0 {
+                y += 0x100;
+            }
+
+            let word1: u16 = shape | y as u16;
+
+            export.push_str(&format!("0x{:0fill$x}, ", word1, fill = 4));
+
+            let mut flip_size_nibble: u16 = match oam.size {
+                OAMSize::Size0 => 0x0000,
+                OAMSize::Size1 => 0x4000,
+                OAMSize::Size2 => 0x8000,
+                OAMSize::Size3 => 0xC000,
+            };
+
+            match oam.flip {
+                OAMFlip::None => {},
+                OAMFlip::Horizontal => {flip_size_nibble += 0x1000},
+                OAMFlip::Vertical => {flip_size_nibble += 0x2000},
+                OAMFlip::Both => {flip_size_nibble += 0x3000}
+            };
+
+            let mut x = oam.x as i16;
+            if x < 0 {
+                x += 0x200;
+            }
+
+            let word2: u16 = flip_size_nibble | x as u16;
+
+            export.push_str(&format!("0x{:0fill$x}, ", word2, fill = 4));
+
+            let palette = (oam.palette as u16) << 12;
+
+            let tile = (oam.tile & 0x0FFF) as u16;
+
+            let word3: u16 = palette | tile;
+
+
+            export.push_str(&format!("0x{:0fill$x}", word3, fill = 4));
+
+            i += 1;
+
+            if i < cell.oams.len() {
+                export.push_str(",\n");
+            }
+        }
+
+        export.push_str("\n};");
     }
 
+    let file = fs::File::create(path);
     
+    if let Ok(mut file) = file {
+        let _ = file.write_all(export.as_bytes());
+    }
 }
