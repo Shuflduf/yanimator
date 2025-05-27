@@ -113,12 +113,12 @@ pub fn export_animation_cels(path: &str, animation_cells: &HashMap<String, Anima
 
     for (name, cell) in animation_cells {
         export.push_str(&format!("\n\nAnimationCel {}[] = {{\n", name));
-        export.push_str(&format!("      /* Len */ {},\n", cell.oams.len()));
+        export.push_str(&format!("    /* Len */ {},\n", cell.oams.len()));
 
         let mut i = 0;
 
         for oam in &cell.oams {
-            export.push_str(&format!("      /* {:0fill$} */ ", i, fill = 3));
+            export.push_str(&format!("    /* {:0fill$} */ ", i, fill = 3));
             let shape: u16 = match oam.shape {
                 OAMShape::Square => 0x0000,
                 OAMShape::Horizontal => 0x4000,
@@ -174,6 +174,33 @@ pub fn export_animation_cels(path: &str, animation_cells: &HashMap<String, Anima
         }
 
         export.push_str("\n};");
+    }
+
+    let file = fs::File::create(path);
+    
+    if let Ok(mut file) = file {
+        let _ = file.write_all(export.as_bytes());
+    }
+}
+
+pub fn export_animations(path: &str, animations: &Vec<Animation>) {
+    let mut export = String::from("// Exported by Yanimator");
+
+    export.push_str("\n#include \"global.h\"\n#include \"graphics.h\"\n\n");
+    export.push_str("// #include \"[Name of anim_cels.inc.c file goes here]\"\n\n");
+
+    for animation in animations {
+        export.push_str(&format!("struct Animation {}[] = {{\n", animation.name));
+
+        let mut i = 0;
+        for frame in &animation.frames {
+            export.push_str(&format!("    /* {:0fill$} */ ", i, fill = 3));
+            export.push_str(&format!("{{ {}, {} }},\n", frame.cell, frame.duration));
+        
+            i += 1;
+        }
+
+        export.push_str("    /* End */ END_ANIMATION\n};\n\n");
     }
 
     let file = fs::File::create(path);

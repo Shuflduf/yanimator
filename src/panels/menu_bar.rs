@@ -190,6 +190,24 @@ fn export_animation_cels(app: &mut Yanimator) {
     export::export_animation_cels(path_str, &app.animation_cels);
 }
 
+fn export_animations(app: &mut Yanimator) {
+    let file_path: PathBuf = match FileDialog::new()
+    .add_filter("C", &["c"])
+    .set_directory("/")
+    .set_title("Select export location")
+    .save_file() {
+        Some(file) => file,
+        None => return
+    };
+
+    let path_str = match file_path.to_str() {
+        Some(path) => path,
+        None => return
+    };
+
+    export::export_animations(path_str, &app.animations);
+}
+
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     menu::bar(ui, |ui| {
         ui.menu_button("File", |ui| {
@@ -230,7 +248,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             }
 
             if ui.add(Button::image_and_text(include_image!("../../assets/film_save.png"), "Export Animations (.c)")).clicked() {
-                // Blah
+                export_animations(app);
             }
         });
     });

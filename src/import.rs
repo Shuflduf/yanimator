@@ -1,7 +1,6 @@
 use std::{collections::HashMap, fs};
 
 use crate::anim_parser::{Animation, AnimationCel};
-use rayon::prelude::*;
 
 pub fn load_project(path_str: &str) -> (HashMap<String, AnimationCel>, Vec<Animation>) {
     let project_bytes = fs::read(path_str).unwrap();
@@ -100,7 +99,7 @@ pub fn load_animation_cels_from_c(path_str: &str) -> HashMap<String, AnimationCe
     }
 
     cel_positions
-        .par_iter()
+        .iter()
         .filter_map(|&start| {
             let sliced_cel = &cels_file[start..];
             let cel_name_end = sliced_cel.find('[')?;
@@ -128,7 +127,7 @@ pub fn load_animations_from_c(path_str: &str) -> Vec<Animation> {
     }
     
     anim_positions
-        .par_iter()
+        .iter()
         .filter_map(|&start| {
             let sliced_anim = &anim_file[start..];
             let anim_name_end = sliced_anim.find('[')?;
