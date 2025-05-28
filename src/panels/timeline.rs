@@ -55,6 +55,49 @@ impl Timeline {
 
 const KEYFRAME_SIZE: f32 = 30.0;
 const SCROLL_SPEED: f32 = 10.0;
+
+fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i: usize, is_end: bool) {
+    let keyframe_rect = egui::Rect::from_min_size(
+        pos2(
+            pos * timeline.zoom + timeline.scroll, 
+            ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0
+        ), 
+        vec2(KEYFRAME_SIZE, KEYFRAME_SIZE)
+    );
+
+    let input_rect = egui::Rect::from_min_size(
+        pos2(
+            pos * timeline.zoom + timeline.scroll + KEYFRAME_SIZE / 4.0, 
+            ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0
+        ), 
+        vec2(KEYFRAME_SIZE / 2.0, KEYFRAME_SIZE)
+    );
+
+    timeline.update_keyframe(input_rect, i);
+    
+    ui.put(keyframe_rect, |ui: &mut Ui| {
+        let mut source = if !is_end {
+            Image::new(include_image!("../../assets/keyframe.png"))
+        } else {
+            Image::new(include_image!("../../assets/end_keyframe.png"))
+        };
+
+        if timeline.is_keyframe_hovered(i) {
+            source = source.tint(Color32::GRAY);
+        }
+
+        if timeline.is_keyframe_selected(i) {
+            source = source.tint(Color32::GREEN);
+        }
+
+        if timeline.is_keyframe_hovered(i) && timeline.is_keyframe_selected(i) {
+            source = source.tint(Color32::LIGHT_GREEN);
+        }
+
+        ui.add(source)
+    });
+}
+
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {  
     app.timeline.rect = ui.max_rect();
 
@@ -113,52 +156,13 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             let mut i = 0;
 
             for frame in &animation.frames {
-                let keyframe_rect = egui::Rect::from_min_size(
-                    pos2(
-                        pos * app.timeline.zoom + app.timeline.scroll, 
-                        ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0
-                    ), 
-                    vec2(KEYFRAME_SIZE, KEYFRAME_SIZE)
-                );
-
-                let input_rect = egui::Rect::from_min_size(
-                    pos2(
-                        pos * app.timeline.zoom + app.timeline.scroll + KEYFRAME_SIZE / 4.0, 
-                        ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0
-                    ), 
-                    vec2(KEYFRAME_SIZE / 2.0, KEYFRAME_SIZE)
-                );
-
-                app.timeline.update_keyframe(input_rect, i);
-                
-                ui.put(keyframe_rect, |ui: &mut Ui| {
-                    let mut source = Image::new(include_image!("../../assets/keyframe.png"));
-
-                    if app.timeline.is_keyframe_hovered(i) {
-                        source = source.tint(Color32::GRAY);
-                    }
-
-                    if app.timeline.is_keyframe_selected(i) {
-                        source = source.tint(Color32::GREEN);
-                    }
-
-                    if app.timeline.is_keyframe_hovered(i) && app.timeline.is_keyframe_selected(i) {
-                        source = source.tint(Color32::LIGHT_GREEN);
-                    }
-
-                    ui.add(source)
-                });
-
-                // if input_rect.contains(mouse_pos) && pointer_state.button_clicked(PointerButton::Primary) && !keyframe_selected {
-                //     if !ui.ctx().input(|i| i.modifiers.shift) {
-                //         app.timeline.selected_keyframes.clear();
-                //     }
-                //     app.timeline.selected_keyframes.push(i);
-                // }
+                draw_keyframe(ui, height, &mut app.timeline, pos, i, false);
 
                 pos += frame.duration as f32;
                 i += 1
             }
+
+            draw_keyframe(ui, height, &mut app.timeline, pos, i, true);
         }
     });
     
