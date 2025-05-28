@@ -14,6 +14,7 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
                     animation.current_frame = 0;
                     app.animation_id = i;
                     app.frames = 0;
+                    app.timeline.keyframes.clear();
                 }
                 
                 i += 1;

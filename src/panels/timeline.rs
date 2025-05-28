@@ -1,12 +1,19 @@
-use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, PointerButton, Rect, Stroke, Ui};
+use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Key, PointerButton, Rect, Response, Stroke, Ui};
 
-use crate::Yanimator;
+use crate::{anim_parser::AnimationFrame, Yanimator};
+
+pub struct Keyframe {
+    input_rect: Rect,
+    selected: bool,
+    hovered: bool
+}
 
 pub struct Timeline {
     pub rect: Rect,
     zoom: f32,
     scroll: f32,
-    pub playing: bool
+    pub playing: bool,
+    pub keyframes: Vec<Keyframe>
 }
 
 impl Timeline {
@@ -15,7 +22,33 @@ impl Timeline {
             rect: Rect::ZERO,
             zoom: 10.0,
             scroll: 0.0,
-            playing: false
+            playing: false,
+            keyframes: Vec::new()
+        }
+    }
+
+    pub fn update_keyframe(&mut self, input_rect: Rect, frame_id: usize) {
+        match self.keyframes.get_mut(frame_id) {
+            Some(keyframe) => {
+                keyframe.input_rect = input_rect;
+            },
+            None => {
+                self.keyframes.push(Keyframe { input_rect: input_rect, selected: false, hovered: false });
+            }
+        }
+    }
+
+    pub fn is_keyframe_selected(&mut self, frame_id: usize) -> bool {
+        match self.keyframes.get(frame_id) {
+            Some(keyframe) => keyframe.selected,
+            None => false
+        }
+    }
+
+    pub fn is_keyframe_hovered(&mut self, frame_id: usize) -> bool {
+        match self.keyframes.get(frame_id) {
+            Some(keyframe) => keyframe.hovered,
+            None => false
         }
     }
 }
@@ -77,13 +110,54 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         let animation = app.animations.get_mut(app.animation_id);
         
         if let Some(animation) = animation {
+            let mut i = 0;
+
             for frame in &animation.frames {
-                ui.put(egui::Rect::from_min_size(
-                    pos2(pos * app.timeline.zoom + app.timeline.scroll, ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0), vec2(KEYFRAME_SIZE, KEYFRAME_SIZE)
-                ), |ui: &mut Ui| {
-                    ui.add(Image::new(include_image!("../../assets/keyframe.png")))
-                }).on_hover_text(frame.cell.clone());
+                let keyframe_rect = egui::Rect::from_min_size(
+                    pos2(
+                        pos * app.timeline.zoom + app.timeline.scroll, 
+                        ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0
+                    ), 
+                    vec2(KEYFRAME_SIZE, KEYFRAME_SIZE)
+                );
+
+                let input_rect = egui::Rect::from_min_size(
+                    pos2(
+                        pos * app.timeline.zoom + app.timeline.scroll + KEYFRAME_SIZE / 4.0, 
+                        ui.cursor().min.y + height / 2.0 - KEYFRAME_SIZE / 2.0
+                    ), 
+                    vec2(KEYFRAME_SIZE / 2.0, KEYFRAME_SIZE)
+                );
+
+                app.timeline.update_keyframe(input_rect, i);
+                
+                ui.put(keyframe_rect, |ui: &mut Ui| {
+                    let mut source = Image::new(include_image!("../../assets/keyframe.png"));
+
+                    if app.timeline.is_keyframe_hovered(i) {
+                        source = source.tint(Color32::GRAY);
+                    }
+
+                    if app.timeline.is_keyframe_selected(i) {
+                        source = source.tint(Color32::GREEN);
+                    }
+
+                    if app.timeline.is_keyframe_hovered(i) && app.timeline.is_keyframe_selected(i) {
+                        source = source.tint(Color32::LIGHT_GREEN);
+                    }
+
+                    ui.add(source)
+                });
+
+                // if input_rect.contains(mouse_pos) && pointer_state.button_clicked(PointerButton::Primary) && !keyframe_selected {
+                //     if !ui.ctx().input(|i| i.modifiers.shift) {
+                //         app.timeline.selected_keyframes.clear();
+                //     }
+                //     app.timeline.selected_keyframes.push(i);
+                // }
+
                 pos += frame.duration as f32;
+                i += 1
             }
         }
     });
@@ -91,13 +165,14 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     ui.add_space(ui.available_height());
 }
 
-pub fn input(i: &InputState, app: &mut Yanimator) {
-    let mouse_pos = i.pointer.hover_pos().unwrap_or(pos2(0.0, 0.0));
-    for event in i.events.clone() {
+pub fn input(input: &InputState, app: &mut Yanimator) {
+    let mouse_pos = input.pointer.latest_pos().unwrap_or(pos2(0.0, 0.0));
+    
+    for event in input.events.clone() {
         match event {
             egui::Event::MouseWheel { unit: _, delta, modifiers: _ } => {
                 if app.timeline.rect.contains(mouse_pos) {
-                    if i.modifiers.ctrl {
+                    if input.modifiers.ctrl {
                         app.timeline.zoom += delta.y;
 
                         if app.timeline.zoom < 3.0 {
@@ -112,9 +187,37 @@ pub fn input(i: &InputState, app: &mut Yanimator) {
         }
     }
     
-    if i.pointer.button_down(PointerButton::Secondary) {
+    if input.pointer.button_down(PointerButton::Secondary) {
         if app.timeline.rect.contains(mouse_pos) {
             app.frames = ((mouse_pos.x - app.timeline.scroll - KEYFRAME_SIZE / 2.0) / app.timeline.zoom) as usize;
+        }
+    }
+
+    let mut deselect_others = None;
+    let mut i = 0;
+
+    for keyframe in &mut app.timeline.keyframes {
+        keyframe.hovered = keyframe.input_rect.contains(mouse_pos);
+        
+        if input.pointer.button_down(PointerButton::Primary) && keyframe.hovered {
+            if !input.modifiers.shift {
+                deselect_others = Some(i);
+            }
+
+            keyframe.selected = true;
+        }
+
+        i += 1;
+    }
+
+    if let Some(id) = deselect_others {
+        i = 0;
+
+        for keyframe in &mut app.timeline.keyframes {
+            if i != id {
+                keyframe.selected = false;
+            }
+            i += 1;
         }
     }
 }
