@@ -9,8 +9,6 @@ use panels::timeline::Timeline;
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
-
-
 mod palette_parser;
 mod sprite_parser;
 mod anim_parser;
@@ -19,7 +17,6 @@ mod panels;
 mod import;
 
 fn main() -> eframe::Result {
-    
     let native_options = eframe::NativeOptions::default();
     eframe::run_native("Yanimator", native_options, Box::new(|cc| Ok(Box::new(Yanimator::new(cc)))))
 }

@@ -1,6 +1,6 @@
-use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Key, PointerButton, Rect, Response, Stroke, Ui};
+use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, PointerButton, Rect, Stroke, Ui};
 
-use crate::{anim_parser::AnimationFrame, Yanimator};
+use crate::Yanimator;
 
 pub struct Keyframe {
     input_rect: Rect,
@@ -191,7 +191,7 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
         }
     }
     
-    if input.pointer.button_down(PointerButton::Secondary) {
+    if input.pointer.button_down(PointerButton::Middle) {
         if app.timeline.rect.contains(mouse_pos) {
             app.frames = ((mouse_pos.x - app.timeline.scroll - KEYFRAME_SIZE / 2.0) / app.timeline.zoom) as usize;
         }
@@ -203,7 +203,7 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
     for keyframe in &mut app.timeline.keyframes {
         keyframe.hovered = keyframe.input_rect.contains(mouse_pos);
         
-        if input.pointer.button_down(PointerButton::Primary) && keyframe.hovered {
+        if input.pointer.button_down(PointerButton::Secondary) && keyframe.hovered {
             if !input.modifiers.shift {
                 deselect_others = Some(i);
             }
@@ -213,7 +213,7 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
 
         i += 1;
     }
-
+    
     if let Some(id) = deselect_others {
         i = 0;
 
@@ -224,4 +224,22 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
             i += 1;
         }
     }
+
+    let animation = app.animations.get_mut(app.animation_id);
+    if let Some(animation) = animation {
+        let mut i = 0;
+
+        for keyframe in &mut app.timeline.keyframes {
+            if keyframe.selected && input.pointer.button_down(PointerButton::Primary) {
+                let result = animation.move_anim_frame(i, (input.pointer.delta().x as f32 / app.timeline.zoom) as isize);
+                
+                if let Some(new_frames) = result {
+                    animation.frames = new_frames;
+                }
+            }
+            i += 1;
+        } 
+    }
+
+       
 }

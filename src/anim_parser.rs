@@ -1,3 +1,4 @@
+
 use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -351,6 +352,11 @@ pub struct AnimationFrame {
     pub duration: u8
 }
 
+struct PositionedAnimationFrame {
+    cell: String,
+    position: isize
+}
+
 pub struct Animation {
     pub frames: Vec<AnimationFrame>,
     pub name: String,
@@ -477,5 +483,69 @@ impl Animation {
         }
 
         result
+    }
+
+    pub fn convert_duration_frames_to_positioned(frames: &Vec<AnimationFrame>) -> Vec<PositionedAnimationFrame> {
+        let mut positioned_frames = Vec::new();
+        let mut total_duration = 0;
+
+        for frame in frames {
+            positioned_frames.push(PositionedAnimationFrame {
+                cell: frame.cell.clone(),
+                position: total_duration
+            });
+
+            total_duration += frame.duration as isize;
+        }
+
+        // Add ending frame
+        positioned_frames.push(PositionedAnimationFrame {
+            cell: String::from("END_ANIMATION"),
+            position: total_duration
+        });
+
+        positioned_frames
+    }
+
+    pub fn convert_positioned_frames_to_duration(frames: Vec<PositionedAnimationFrame>) -> Vec<AnimationFrame> {
+        let mut duration_frames = Vec::new();
+
+        if frames.len() == 0 {
+            return duration_frames;
+        }
+
+        // this would be an animation with only an ending frame
+        // not sure how that'd happen
+        if frames.len() == 1 {
+            duration_frames.push(AnimationFrame { 
+                cell: frames[0].cell.clone(), 
+                duration: 4
+            });
+
+            return duration_frames;
+        }
+
+        for i in 0..frames.len() - 1 {
+            let frame = &frames[i];
+            let next_frame = &frames[i + 1];
+
+            duration_frames.push(AnimationFrame { 
+                cell: frame.cell.clone(), 
+                duration: (next_frame.position - frame.position) as u8
+            });
+        }
+
+        duration_frames
+    }
+
+    pub fn move_anim_frame(&mut self, frame_id: usize, offset: isize) -> Option<Vec<AnimationFrame>> {
+        if frame_id == 0 {return None}
+        if offset == 0 {return None}
+        
+        let mut positioned_frames = Animation::convert_duration_frames_to_positioned(&self.frames);
+        let frame_to_edit = positioned_frames.get_mut(frame_id)?;
+        frame_to_edit.position += offset;
+
+        Some(Animation::convert_positioned_frames_to_duration(positioned_frames))
     }
 }
