@@ -15,7 +15,7 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 - [x] Selecting keyframes in timeline (shift+click multiple)
 - [x] Moving keyframes in timeline
 - [x] Adding keyframes into timeline
-- [ ] Deleting keyframes in timeline
+- [x] Deleting keyframes in timeline
 - [ ] Keybinds for timeline (space to play, arrow keys to seek, del to delete, etc)
 - [ ] Copy/paste keyframes in timeline
 - [ ] Click and drag to select keyframes

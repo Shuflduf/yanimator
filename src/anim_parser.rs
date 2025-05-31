@@ -574,4 +574,15 @@ impl Animation {
         
         self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames)
     }
+    
+    pub fn remove_anim_frame(&mut self, frame_id: usize) {
+        if frame_id == 0 {return;}
+        
+        if let Some(index) = self.frames.iter().position(|f| f.id == frame_id) {
+            let duration = self.frames[index].duration;
+            self.frames.remove(index);
+            
+            self.frames[index - 1].duration += duration;
+        }
+    }
 }

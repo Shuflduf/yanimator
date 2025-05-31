@@ -1,4 +1,4 @@
-use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, PointerButton, Rect, Stroke, Ui};
+use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Key, PointerButton, Rect, Stroke, Ui};
 
 use crate::Yanimator;
 
@@ -210,6 +210,8 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
 
             keyframe.selected = true;
         }
+
+        
     }
     
     if let Some(id) = deselect_others {   
@@ -231,8 +233,10 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
             if keyframe.selected && input.pointer.button_released(PointerButton::Primary) {
                 animation.move_anim_frame(keyframe.id, ((mouse_pos.x - app.timeline.start_drag_x) / app.timeline.zoom) as isize);
             }
+            
+            if keyframe.selected && input.key_pressed(Key::Delete) {
+                animation.remove_anim_frame(keyframe.id);
+            }
         } 
     }
-
-    
 }
