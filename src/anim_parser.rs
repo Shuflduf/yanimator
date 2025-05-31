@@ -515,7 +515,7 @@ impl Animation {
             position: total_duration,
             id: positioned_frames.len()
         });
-
+        
         positioned_frames
     }
 
@@ -553,17 +553,25 @@ impl Animation {
 
         duration_frames
     }
-
-    pub fn move_anim_frame(&mut self, frame_id: usize, offset: isize) -> Option<Vec<AnimationFrame>> {
+    
+    pub fn move_anim_frame(&mut self, frame_id: usize, offset: isize) -> Option<()> {
         if frame_id == 0 {return None}
         if offset == 0 {return None}
         
         let mut positioned_frames = Animation::convert_duration_frames_to_positioned(&self.frames);
-        println!("{frame_id}");
         let frame_to_edit = positioned_frames.iter_mut().find(|k| k.id == frame_id)?;
         
         frame_to_edit.position += offset;
+        self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames);
         
-        Some(Animation::convert_positioned_frames_to_duration(positioned_frames))
+        Some(())
+    }
+    
+    pub fn insert_anim_frame(&mut self, cell: String, position: isize) {
+        let mut positioned_frames = Animation::convert_duration_frames_to_positioned(&self.frames);
+        
+        positioned_frames.push(PositionedAnimationFrame { cell, position, id: positioned_frames.len() + 1 });
+        
+        self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames)
     }
 }

@@ -21,6 +21,15 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                             app.state = AppState::CellEditor;
                             app.editing_cell = name.clone();
                         }
+
+                        if ui.add(ImageButton::new(include_image!("../../assets/keyframe_add.png"))).clicked() {
+                            let animation = app.animations.get_mut(app.animation_id);
+                            
+                            if let Some(animation) = animation {
+                                animation.insert_anim_frame(name.clone(), app.frames as isize);
+                                
+                            }
+                        }
                     });
                 });
                 

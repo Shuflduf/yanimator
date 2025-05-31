@@ -2,6 +2,8 @@ use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, P
 
 use crate::Yanimator;
 
+
+#[derive(Debug)]
 pub struct Keyframe {
     input_rect: Rect,
     selected: bool,
@@ -37,6 +39,7 @@ impl Timeline {
             },
             None => {
                 self.keyframes.push(Keyframe { input_rect: input_rect, selected: false, hovered: false, id: frame_id });
+                
             }
         }
     }
@@ -135,7 +138,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
 
         for i in 0..100 {
             if i % 10 != 0 { continue; }
-
+            
             ui.painter().line_segment(
                 [
                     pos2(i as f32 * app.timeline.zoom + KEYFRAME_SIZE / 2.0 + app.timeline.scroll, ui.cursor().min.y + KEYFRAME_SIZE),
@@ -154,15 +157,10 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         let mut pos: f32 = 0.0;
 
         let animation = app.animations.get_mut(app.animation_id);
-        
         if let Some(animation) = animation {
-            let mut i = 0;
-            
             for frame in &animation.frames {
                 draw_keyframe(ui, height, &mut app.timeline, pos, frame.id, false);
-
                 pos += frame.duration as f32;
-                i += 1
             }
 
             draw_keyframe(ui, height, &mut app.timeline, pos, animation.frames.len(), true);
@@ -227,20 +225,14 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
     if input.pointer.button_pressed(PointerButton::Primary) {
         app.timeline.start_drag_x = mouse_pos.x;
     }
-
+    
     if let Some(animation) = animation {
-        let mut i = 0;
-            
         for keyframe in &mut app.timeline.keyframes {
             if keyframe.selected && input.pointer.button_released(PointerButton::Primary) {
-                let result = animation.move_anim_frame(keyframe.id, ((mouse_pos.x - app.timeline.start_drag_x) / app.timeline.zoom) as isize);
-                
-                if let Some(new_frames) = result {
-                    animation.frames = new_frames;
-                }
+                animation.move_anim_frame(keyframe.id, ((mouse_pos.x - app.timeline.start_drag_x) / app.timeline.zoom) as isize);
             }
-            
-            i += 1;
         } 
     }
+
+    
 }
