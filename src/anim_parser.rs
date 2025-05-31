@@ -1,5 +1,5 @@
 
-use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
+use egui::{frame, pos2, vec2, Color32, Rect, TextureHandle, Ui};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {
@@ -349,12 +349,14 @@ impl AnimationCel {
 
 pub struct AnimationFrame {
     pub cell: String,
-    pub duration: u8
+    pub duration: u8,
+    pub id: usize
 }
 
-struct PositionedAnimationFrame {
+pub struct PositionedAnimationFrame {
     cell: String,
-    position: isize
+    position: isize,
+    id: usize
 }
 
 pub struct Animation {
@@ -379,6 +381,8 @@ impl Animation {
         for pos in frame_positions.into_iter() {
             let mut cel_name = String::new();
             let mut duration_str = String::new();
+            let mut frame_id = 0;
+
             i = pos + 1;
             while c.chars().nth(i) != Some(',') {
                 if c.chars().nth(i) != Some(' ') {
@@ -403,8 +407,10 @@ impl Animation {
 
             frames.push(AnimationFrame {
                 cell: cel_name,
-                duration
-            })
+                duration,
+                id: frame_id
+            });
+            frame_id += 1;
         }
 
         Some(Animation { frames, name: name.to_string(), current_frame: 0 })
@@ -413,6 +419,7 @@ impl Animation {
     pub fn from_bin(bin: &[u8]) -> Option<Animation> {
         let mut name = String::from("");
         let mut i = 0;
+        let mut frame_id = 0;
 
         while bin[i] != 0x00 {
             name.push(bin[i] as char);
@@ -432,13 +439,15 @@ impl Animation {
                 i += 1; // Go to duration byte
                 frames.push(AnimationFrame {
                     cell,
-                    duration: bin[i]
+                    duration: bin[i],
+                    id: frame_id
                 });
-
+                frame_id += 1;
                 cell = String::from("");
             }
             
             i += 1;
+            
         }
 
         Some(Animation { frames, name, current_frame: 0 })
@@ -488,11 +497,13 @@ impl Animation {
     pub fn convert_duration_frames_to_positioned(frames: &Vec<AnimationFrame>) -> Vec<PositionedAnimationFrame> {
         let mut positioned_frames = Vec::new();
         let mut total_duration = 0;
-
+        
         for frame in frames {
+            println!("{}", frame.id);
             positioned_frames.push(PositionedAnimationFrame {
                 cell: frame.cell.clone(),
-                position: total_duration
+                position: total_duration,
+                id: frame.id
             });
 
             total_duration += frame.duration as isize;
@@ -501,25 +512,29 @@ impl Animation {
         // Add ending frame
         positioned_frames.push(PositionedAnimationFrame {
             cell: String::from("END_ANIMATION"),
-            position: total_duration
+            position: total_duration,
+            id: positioned_frames.len()
         });
 
         positioned_frames
     }
 
-    pub fn convert_positioned_frames_to_duration(frames: Vec<PositionedAnimationFrame>) -> Vec<AnimationFrame> {
+    pub fn convert_positioned_frames_to_duration(mut frames: Vec<PositionedAnimationFrame>) -> Vec<AnimationFrame> {
+        frames.sort_by(|a, b| a.position.cmp(&b.position));
+        
         let mut duration_frames = Vec::new();
-
+        
         if frames.len() == 0 {
             return duration_frames;
         }
-
+        
         // this would be an animation with only an ending frame
         // not sure how that'd happen
         if frames.len() == 1 {
             duration_frames.push(AnimationFrame { 
                 cell: frames[0].cell.clone(), 
-                duration: 4
+                duration: 4,
+                id: 0
             });
 
             return duration_frames;
@@ -531,7 +546,8 @@ impl Animation {
 
             duration_frames.push(AnimationFrame { 
                 cell: frame.cell.clone(), 
-                duration: (next_frame.position - frame.position) as u8
+                duration: (next_frame.position - frame.position) as u8,
+                id: frame.id
             });
         }
 
@@ -543,9 +559,11 @@ impl Animation {
         if offset == 0 {return None}
         
         let mut positioned_frames = Animation::convert_duration_frames_to_positioned(&self.frames);
-        let frame_to_edit = positioned_frames.get_mut(frame_id)?;
+        println!("{frame_id}");
+        let frame_to_edit = positioned_frames.iter_mut().find(|k| k.id == frame_id)?;
+        
         frame_to_edit.position += offset;
-
+        
         Some(Animation::convert_positioned_frames_to_duration(positioned_frames))
     }
 }

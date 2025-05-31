@@ -5,7 +5,8 @@ use crate::Yanimator;
 pub struct Keyframe {
     input_rect: Rect,
     selected: bool,
-    hovered: bool
+    hovered: bool,
+    id: usize
 }
 
 pub struct Timeline {
@@ -13,7 +14,8 @@ pub struct Timeline {
     zoom: f32,
     scroll: f32,
     pub playing: bool,
-    pub keyframes: Vec<Keyframe>
+    pub keyframes: Vec<Keyframe>,
+    start_drag_x: f32
 }
 
 impl Timeline {
@@ -23,30 +25,31 @@ impl Timeline {
             zoom: 10.0,
             scroll: 0.0,
             playing: false,
-            keyframes: Vec::new()
+            keyframes: Vec::new(),
+            start_drag_x: 0.0
         }
     }
 
     pub fn update_keyframe(&mut self, input_rect: Rect, frame_id: usize) {
-        match self.keyframes.get_mut(frame_id) {
+        match self.keyframes.iter_mut().find(|k| k.id == frame_id) {
             Some(keyframe) => {
                 keyframe.input_rect = input_rect;
             },
             None => {
-                self.keyframes.push(Keyframe { input_rect: input_rect, selected: false, hovered: false });
+                self.keyframes.push(Keyframe { input_rect: input_rect, selected: false, hovered: false, id: frame_id });
             }
         }
     }
 
     pub fn is_keyframe_selected(&mut self, frame_id: usize) -> bool {
-        match self.keyframes.get(frame_id) {
+        match self.keyframes.iter().find(|&k| k.id == frame_id) {
             Some(keyframe) => keyframe.selected,
             None => false
         }
     }
-
+    
     pub fn is_keyframe_hovered(&mut self, frame_id: usize) -> bool {
-        match self.keyframes.get(frame_id) {
+        match self.keyframes.iter().find(|&k| k.id == frame_id) {
             Some(keyframe) => keyframe.hovered,
             None => false
         }
@@ -154,15 +157,15 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         
         if let Some(animation) = animation {
             let mut i = 0;
-
+            
             for frame in &animation.frames {
-                draw_keyframe(ui, height, &mut app.timeline, pos, i, false);
+                draw_keyframe(ui, height, &mut app.timeline, pos, frame.id, false);
 
                 pos += frame.duration as f32;
                 i += 1
             }
 
-            draw_keyframe(ui, height, &mut app.timeline, pos, i, true);
+            draw_keyframe(ui, height, &mut app.timeline, pos, animation.frames.len(), true);
         }
     });
     
@@ -198,48 +201,46 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
     }
 
     let mut deselect_others = None;
-    let mut i = 0;
-
+    
     for keyframe in &mut app.timeline.keyframes {
         keyframe.hovered = keyframe.input_rect.contains(mouse_pos);
         
         if input.pointer.button_down(PointerButton::Secondary) && keyframe.hovered {
             if !input.modifiers.shift {
-                deselect_others = Some(i);
+                deselect_others = Some(keyframe.id);
             }
 
             keyframe.selected = true;
         }
-
-        i += 1;
     }
     
-    if let Some(id) = deselect_others {
-        i = 0;
-
+    if let Some(id) = deselect_others {   
         for keyframe in &mut app.timeline.keyframes {
-            if i != id {
+            if keyframe.id != id {
                 keyframe.selected = false;
             }
-            i += 1;
         }
     }
 
     let animation = app.animations.get_mut(app.animation_id);
+
+    if input.pointer.button_pressed(PointerButton::Primary) {
+        app.timeline.start_drag_x = mouse_pos.x;
+    }
+
     if let Some(animation) = animation {
         let mut i = 0;
-
+            
         for keyframe in &mut app.timeline.keyframes {
-            if keyframe.selected && input.pointer.button_down(PointerButton::Primary) {
-                let result = animation.move_anim_frame(i, (input.pointer.delta().x as f32 / app.timeline.zoom) as isize);
+            if keyframe.selected && input.pointer.button_released(PointerButton::Primary) {
+                let result = animation.move_anim_frame(keyframe.id, ((mouse_pos.x - app.timeline.start_drag_x) / app.timeline.zoom) as isize);
                 
                 if let Some(new_frames) = result {
                     animation.frames = new_frames;
                 }
             }
+            
             i += 1;
         } 
     }
-
-       
 }
