@@ -209,6 +209,14 @@ fn export_animations(app: &mut Yanimator) {
 }
 
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
+    if ui.input_mut(|i| i.consume_shortcut(&OPEN_PROJECT)) {
+        open_project(app);
+    }
+
+    if ui.input_mut(|i| i.consume_shortcut(&SAVE_PROJECT)) {
+        open_project(app);
+    }
+
     menu::bar(ui, |ui| {
         ui.menu_button("File", |ui| {
             if ui.add(Button::image_and_text(include_image!("../../assets/page_add.png"), "New Project").shortcut_text(ui.ctx().format_shortcut(&NEW_PROJECT))).clicked() {
