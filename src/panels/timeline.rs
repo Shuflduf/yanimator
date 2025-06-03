@@ -17,7 +17,8 @@ pub struct Timeline {
     scroll: f32,
     pub playing: bool,
     pub keyframes: Vec<Keyframe>,
-    start_drag_x: f32
+    start_drag_x: f32,
+    dragging: bool
 }
 
 impl Timeline {
@@ -28,7 +29,8 @@ impl Timeline {
             scroll: 0.0,
             playing: false,
             keyframes: Vec::new(),
-            start_drag_x: 0.0
+            start_drag_x: 0.0,
+            dragging: true
         }
     }
 
@@ -102,6 +104,23 @@ fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i:
 
         ui.add(source)
     });
+
+    if timeline.dragging && timeline.is_keyframe_selected(i) {
+        let mouse_pos = ui.ctx().input(|i| i.pointer.latest_pos().unwrap_or(pos2(0.0, 0.0)));
+        let dragged_rect = keyframe_rect.translate(vec2(((mouse_pos.x - timeline.start_drag_x) / timeline.zoom).round() * timeline.zoom, 0.0));
+
+        ui.put(dragged_rect, |ui: &mut Ui| {
+            let mut source = if !is_end {
+                Image::new(include_image!("../../assets/keyframe.png"))
+            } else {
+                Image::new(include_image!("../../assets/end_keyframe.png"))
+            };
+
+            source = source.tint(Color32::from_rgba_unmultiplied(0, 255, 0, 128));
+            
+            ui.add(source)
+        });
+    }
 }
 
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {  
@@ -166,7 +185,11 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             }
 
             draw_keyframe(ui, height, &mut app.timeline, pos, animation.frames.len(), true);
+        
+            
         }
+
+        
     });
     
     ui.add_space(ui.available_height());
@@ -201,10 +224,15 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
     }
 
     let mut deselect_others = None;
-    
+    let mut any_hovered = false;
+
     for keyframe in &mut app.timeline.keyframes {
         keyframe.hovered = keyframe.input_rect.contains(mouse_pos);
         
+        if keyframe.hovered {
+            any_hovered = true;
+        }
+
         if input.pointer.button_down(PointerButton::Secondary) && keyframe.hovered {
             if !input.modifiers.shift {
                 deselect_others = Some(keyframe.id);
@@ -212,8 +240,6 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
 
             keyframe.selected = true;
         }
-
-        
     }
     
     if let Some(id) = deselect_others {   
@@ -226,19 +252,30 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
 
     let animation = app.animations.get_mut(app.animation_id);
 
-    if input.pointer.button_pressed(PointerButton::Primary) {
-        app.timeline.start_drag_x = mouse_pos.x;
-    }
-    
     if let Some(animation) = animation {
         for keyframe in &mut app.timeline.keyframes {
-            if keyframe.selected && input.pointer.button_released(PointerButton::Primary) {
-                animation.move_anim_frame(keyframe.id, ((mouse_pos.x - app.timeline.start_drag_x) / app.timeline.zoom) as isize);
+            if keyframe.hovered && keyframe.selected && input.pointer.button_pressed(PointerButton::Primary) {
+                app.timeline.start_drag_x = mouse_pos.x;
+                app.timeline.dragging = true;
+            }
+
+            if keyframe.selected && app.timeline.dragging && input.pointer.button_released(PointerButton::Primary) {
+                animation.move_anim_frame(keyframe.id, ((mouse_pos.x - app.timeline.start_drag_x) / app.timeline.zoom).round() as isize);
             }
             
             if keyframe.selected && input.key_pressed(Key::Delete) {
                 animation.remove_anim_frame(keyframe.id);
             }
         } 
+    }
+
+    if app.timeline.dragging && input.pointer.button_released(PointerButton::Primary) {
+        app.timeline.dragging = false;
+    }
+
+    if !any_hovered && app.timeline.dragging == false && (input.pointer.button_down(PointerButton::Primary) || input.pointer.button_down(PointerButton::Secondary)) {
+        for keyframe in &mut app.timeline.keyframes {
+            keyframe.selected = false;
+        }
     }
 }
