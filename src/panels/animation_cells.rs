@@ -6,14 +6,18 @@ use crate::{anim_parser::AnimationCel, AppState, Yanimator};
 
 pub struct AnimationCellsPanel {
     creation_modal_open: bool,
-    cell_name: String
+    deletion_confirmation_modal_open: bool,
+    cell_name: String,
+    deleting_cell: Option<String>
 }
 
 impl AnimationCellsPanel {
     pub fn init() -> Self {
         Self { 
             creation_modal_open: false,
-            cell_name: String::from("")
+            deletion_confirmation_modal_open: false,
+            cell_name: String::from(""),
+            deleting_cell: None
         }
     }
 }
@@ -36,6 +40,26 @@ fn create_animation_cell(app: &mut Yanimator) {
         name: app.animation_cells_panel.cell_name.clone(),
         oams: Vec::new()
     });
+}
+
+fn remove_animation_cell(app: &mut Yanimator) {
+    if let Some(deleting_cell) = &app.animation_cells_panel.deleting_cell {
+        app.animation_cels.remove(deleting_cell);
+        
+        for animation in &mut app.animations {
+            let mut removal_indexes: Vec<usize> = animation.frames.iter().enumerate().filter_map(|(_, frame)| {
+                if frame.cell == *deleting_cell {
+                    Some(frame.id)
+                } else {None}
+            }).collect();
+            
+            removal_indexes.reverse();
+
+            for index in removal_indexes {
+                animation.remove_anim_frame(index);
+            }
+        }
+    }
 }
 
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
@@ -76,6 +100,11 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                                 animation.insert_anim_frame(name.clone(), app.frames as isize);
                             }
                         }
+
+                        if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/delete.png"))).clicked() {
+                            app.animation_cells_panel.deleting_cell = Some(name.clone());
+                            app.animation_cells_panel.deletion_confirmation_modal_open = true;
+                        }
                     });
                 });
                 
@@ -107,7 +136,28 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                 create_animation_cell(app)
             }
         });
-    }
+    } else if app.animation_cells_panel.deletion_confirmation_modal_open {
+        Modal::new(Id::new("animation_cell_deletion")).show(ui.ctx(), |ui| {
+            if let Some(deleting_cell) = &app.animation_cells_panel.deleting_cell {
+                ui.heading("Confirm Deletion");
+                ui.separator();
 
+                ui.label(format!("Are you sure you want to delete {}?", deleting_cell));
+                ui.label("This will also remove it from all animations.");
+
+                ui.horizontal(|ui| {
+                    if ui.button("Cancel").clicked() {
+                        app.animation_cells_panel.deletion_confirmation_modal_open = false;
+                    }
+
+                    if ui.button("Delete").clicked() {
+                        remove_animation_cell(app);
+                        app.animation_cells_panel.deletion_confirmation_modal_open = false;
+                    }
+                });
+            }
+        });
+    }
+    
     ui.allocate_rect(rect, egui::Sense::hover());
 }
