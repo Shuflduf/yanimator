@@ -127,6 +127,8 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         };
     });
 
+    ui.separator();
+    
     ui.horizontal(|ui| {
         ui.painter().line_segment(
             [

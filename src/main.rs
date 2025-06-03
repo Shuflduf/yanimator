@@ -5,7 +5,7 @@ use eframe::egui;
 use egui::{Rect, TextureHandle};
 use egui_extras::install_image_loaders;
 use palette_parser::Palette;
-use panels::timeline::Timeline;
+use panels::{animation_cells::AnimationCellsPanel, timeline::Timeline};
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
@@ -46,6 +46,7 @@ struct Yanimator {
     viewport_rect: Rect,
     
     timeline: Timeline,
+    animation_cells_panel: AnimationCellsPanel,
     spritesheet_palette: usize
 }
 
@@ -69,6 +70,7 @@ impl Yanimator {
             frames: 0,
             viewport_rect: Rect::ZERO,
             timeline: Timeline::init(),
+            animation_cells_panel: AnimationCellsPanel::init(),
             editing_cell: String::from(""),
             editing_oam: 0,
             spritesheet_palette: 0
@@ -98,7 +100,6 @@ impl eframe::App for Yanimator {
             
             animation.current_frame = animation.get_anim_frame_from_frames(self.frames);
         }
-        
         
         ctx.request_repaint();
         
