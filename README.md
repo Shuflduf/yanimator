@@ -24,7 +24,7 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 
 ### AnimationCell/OAM editing
 
-- [ ] Adding/removing animation cells
+- [x] Adding/removing animation cells
 - [ ] Better visual for what OAM is selected (outline probably)
 - [ ] Properly clamp Tile ID based on shape and size
 - [ ] Ability to select Tile ID from spritesheet

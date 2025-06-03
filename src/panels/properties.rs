@@ -31,6 +31,15 @@ fn get_size_string_with_shape<'a>(size: &'a OAMSize, shape: &'a OAMShape) -> &'a
     }
 }
 
+fn remove_oam(app: &mut Yanimator) {
+    let cell  = match app.animation_cels.get_mut(&app.editing_cell) {
+        Some(cell) => cell,
+        None => return,
+    };
+
+    cell.oams.remove(app.editing_oam);
+}
+
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     ui.heading("Properties");
     
@@ -44,6 +53,9 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         None => return,
     };
     
+    let sprites_len = app.spritesheet.sprites.len();
+    let palette_len = app.palette.palettes.len();
+
     egui::Grid::new("animation_cells")
         .num_columns(2)
         .striped(true)
@@ -109,6 +121,12 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             ui.end_row();
         });
 
+    ui.separator();
+
+    if ui.button("Delete OAM").clicked() {
+        remove_oam(app);
+    }
+    
     let rect = egui::Rect::from_min_size(
         ui.cursor().min,
         egui::vec2(ui.available_width().max(1.0), ui.available_height())
