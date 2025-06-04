@@ -355,20 +355,22 @@ pub struct AnimationFrame {
 
 pub struct PositionedAnimationFrame {
     cell: String,
-    position: isize,
+    pub position: isize,
     id: usize
 }
 
 pub struct Animation {
     pub frames: Vec<AnimationFrame>,
     pub name: String,
-    pub current_frame: usize
+    pub current_frame: usize,
+    pub duration: usize
 }
 
 impl Animation {
     pub fn from_c(c: &str, name: &str) -> Option<Animation> {
         let mut frame_positions = Vec::new();
         let mut i = 0;
+        let mut total_duration = 0;
 
         while let Some(pos) = c[i..].find("{") {
             frame_positions.push(i + pos);
@@ -411,15 +413,17 @@ impl Animation {
                 id: frame_id
             });
             frame_id += 1;
+            total_duration += duration as usize;
         }
 
-        Some(Animation { frames, name: name.to_string(), current_frame: 0 })
+        Some(Animation { frames, name: name.to_string(), current_frame: 0, duration: total_duration })
     }
 
     pub fn from_bin(bin: &[u8]) -> Option<Animation> {
         let mut name = String::from("");
         let mut i = 0;
         let mut frame_id = 0;
+        let mut duration = 0;
 
         while bin[i] != 0x00 {
             name.push(bin[i] as char);
@@ -442,6 +446,7 @@ impl Animation {
                     duration: bin[i],
                     id: frame_id
                 });
+                duration += bin[i] as usize;
                 frame_id += 1;
                 cell = String::from("");
             }
@@ -450,7 +455,7 @@ impl Animation {
             
         }
 
-        Some(Animation { frames, name, current_frame: 0 })
+        Some(Animation { frames, name, current_frame: 0, duration })
     }
 
     /*pub fn get_total_frame_duration(&self, index: usize) -> usize {
@@ -508,13 +513,6 @@ impl Animation {
 
             total_duration += frame.duration as isize;
         }
-
-        // Add ending frame
-        positioned_frames.push(PositionedAnimationFrame {
-            cell: String::from("END_ANIMATION"),
-            position: total_duration,
-            id: positioned_frames.len()
-        });
         
         positioned_frames
     }
@@ -583,6 +581,23 @@ impl Animation {
             self.frames.remove(index);
             
             self.frames[index - 1].duration += duration;
+        }
+    }
+
+    pub fn get_minimum_duration(&self) -> usize {
+        let positioned_frames = Animation::convert_duration_frames_to_positioned(&self.frames);
+            
+        if let Some(last_frame) = positioned_frames.get(positioned_frames.len() - 1) {
+            last_frame.position as usize
+        } else {
+            0
+        }
+    }
+
+    pub fn update_duration(&mut self) {
+        let minimum_duration = self.get_minimum_duration();
+        if let Some(frame) = self.frames.last_mut() {
+            frame.duration = (self.duration - minimum_duration) as u8;
         }
     }
 }

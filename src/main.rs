@@ -94,7 +94,7 @@ impl eframe::App for Yanimator {
         let animation = self.animations.get_mut(self.animation_id);
         
         if let Some(animation) = animation {
-            if self.frames == animation.get_total_frames() {
+            if self.frames >= animation.get_total_frames() {
                 self.frames = 0;
             }
             

@@ -11,9 +11,12 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
     
     let animation = app.animations.get(app.animation_id);
     if let Some(animation) = animation {
-        if let Some(animation_cel) = app.animation_cels.get(&animation.frames[animation.current_frame].cell) {
-            animation_cel.draw(&app.textures, ui);
+        if let Some(frame) = animation.frames.get(animation.current_frame) {
+            if let Some(animation_cel) = app.animation_cels.get(&frame.cell) {
+                animation_cel.draw(&app.textures, ui);
+            }
         }
+        
     }
     
     });
