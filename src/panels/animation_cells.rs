@@ -5,7 +5,7 @@ use egui::{include_image, vec2, Id, ImageButton, Modal, Ui};
 use crate::{anim_parser::AnimationCel, AppState, Yanimator};
 
 pub struct AnimationCellsPanel {
-    creation_modal_open: bool,
+    pub creation_modal_open: bool,
     deletion_confirmation_modal_open: bool,
     cell_name: String,
     deleting_cell: Option<String>

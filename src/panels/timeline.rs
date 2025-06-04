@@ -278,4 +278,21 @@ pub fn input(input: &InputState, app: &mut Yanimator) {
             keyframe.selected = false;
         }
     }
+
+    // todo: there will probably be more text box modal things
+    // there should be a common function to check for those
+    // when more are added
+    if app.animation_cells_panel.creation_modal_open {return;}
+
+    if input.key_pressed(Key::Space) {
+        app.timeline.playing = !app.timeline.playing;
+    }
+
+    if input.key_pressed(Key::ArrowLeft) {
+        if app.frames > 0 { app.frames -= 1 };
+    }
+
+    if input.key_pressed(Key::ArrowRight) {
+        app.frames += 1;
+    }
 }
