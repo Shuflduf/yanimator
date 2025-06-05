@@ -517,7 +517,7 @@ impl Animation {
         positioned_frames
     }
 
-    pub fn convert_positioned_frames_to_duration(mut frames: Vec<PositionedAnimationFrame>) -> Vec<AnimationFrame> {
+    pub fn convert_positioned_frames_to_duration(mut frames: Vec<PositionedAnimationFrame>, duration: usize) -> Vec<AnimationFrame> {
         frames.sort_by(|a, b| a.position.cmp(&b.position));
         
         let mut duration_frames = Vec::new();
@@ -525,26 +525,18 @@ impl Animation {
         if frames.len() == 0 {
             return duration_frames;
         }
-        
-        // this would be an animation with only an ending frame
-        // not sure how that'd happen
-        if frames.len() == 1 {
-            duration_frames.push(AnimationFrame { 
-                cell: frames[0].cell.clone(), 
-                duration: 4,
-                id: 0
-            });
 
-            return duration_frames;
-        }
-
-        for i in 0..frames.len() - 1 {
+        for i in 0..frames.len() {
             let frame = &frames[i];
-            let next_frame = &frames[i + 1];
+            let next_frame_pos = if i == frames.len() - 1 {
+                duration as isize
+            } else {
+                frames[i + 1].position
+            };
 
             duration_frames.push(AnimationFrame { 
                 cell: frame.cell.clone(), 
-                duration: (next_frame.position - frame.position) as u8,
+                duration: (next_frame_pos - frame.position) as u8,
                 id: frame.id
             });
         }
@@ -560,7 +552,7 @@ impl Animation {
         let frame_to_edit = positioned_frames.iter_mut().find(|k| k.id == frame_id)?;
         
         frame_to_edit.position += offset;
-        self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames);
+        self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames, self.duration);
         
         Some(())
     }
@@ -570,7 +562,7 @@ impl Animation {
         
         positioned_frames.push(PositionedAnimationFrame { cell, position, id: positioned_frames.len() + 1 });
         
-        self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames)
+        self.frames = Animation::convert_positioned_frames_to_duration(positioned_frames, self.duration);
     }
     
     pub fn remove_anim_frame(&mut self, frame_id: usize) {
