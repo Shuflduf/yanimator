@@ -21,6 +21,9 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 - [ ] Copy/paste keyframes in timeline
 - [ ] Click and drag to select keyframes
 - [x] Remove the "end" keyframe and make the total animation length a slider (the end keyframe hates me and causes a lot of issues)
+- [ ] Make timeline zooming centered on where mouse cursor is and not at the beginning of the timeline
+- [x] Adding animations (...idk how i missed this)
+- [ ] Removing animations
 
 ### AnimationCell/OAM editing
 

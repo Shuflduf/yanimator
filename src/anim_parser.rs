@@ -483,6 +483,10 @@ impl Animation {
             return 0;
         }
 
+        if self.frames.len() == 0 {
+            return 0;
+        }
+
         let mut result = 0;
         let mut i = 0;
         let mut current_frame = &self.frames[0];
@@ -579,6 +583,10 @@ impl Animation {
     pub fn get_minimum_duration(&self) -> usize {
         let positioned_frames = Animation::convert_duration_frames_to_positioned(&self.frames);
             
+        if positioned_frames.len() == 0 {
+            return 0;
+        }
+
         if let Some(last_frame) = positioned_frames.get(positioned_frames.len() - 1) {
             last_frame.position as usize
         } else {

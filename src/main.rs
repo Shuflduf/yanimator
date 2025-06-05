@@ -9,6 +9,8 @@ use panels::{animation_cells::AnimationCellsPanel, timeline::Timeline};
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
+use crate::panels::topbar::Topbar;
+
 mod palette_parser;
 mod sprite_parser;
 mod anim_parser;
@@ -44,10 +46,12 @@ struct Yanimator {
     last_frame_time: Instant,
     frames: usize,
     viewport_rect: Rect,
-    
+    spritesheet_palette: usize,
+
     timeline: Timeline,
     animation_cells_panel: AnimationCellsPanel,
-    spritesheet_palette: usize
+    topbar: Topbar,
+    
 }
 
 impl Yanimator {
@@ -71,6 +75,7 @@ impl Yanimator {
             viewport_rect: Rect::ZERO,
             timeline: Timeline::init(),
             animation_cells_panel: AnimationCellsPanel::init(),
+            topbar: Topbar::init(),
             editing_cell: String::from(""),
             editing_oam: 0,
             spritesheet_palette: 0

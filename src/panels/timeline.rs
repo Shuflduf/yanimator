@@ -1,6 +1,6 @@
 use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Key, PointerButton, Rect, Stroke, Ui};
 
-use crate::{anim_parser::Animation, Yanimator};
+use crate::Yanimator;
 
 
 #[derive(Debug)]
@@ -146,9 +146,10 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
 
         ui.label(format!("Frame {}/{}", app.frames, animation_end));
 
+
         if let Some(animation) = app.animations.get_mut(app.animation_id) {
             let minimum_duration = animation.get_minimum_duration();
-
+            
             ui.label("Animation Duration: ");
             ui.add(egui::DragValue::new(&mut animation.duration).range(minimum_duration..=minimum_duration + 255));
 

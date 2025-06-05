@@ -27,7 +27,7 @@ fn is_cell_name_invalid(app: &mut Yanimator) -> Option<String> {
     
     if cell_name.len() == 0 {return None}
     if cell_name.contains(" ") {return Some(String::from("Cell name must not contain spaces"))}
-    if !cell_name.chars().nth(0).unwrap().is_alphabetic() {return Some(String::from("First letter in cell name must be a letter"))}
+    if !cell_name.chars().nth(0).unwrap().is_alphabetic() {return Some(String::from("First character in cell name must be a letter"))}
     if app.animation_cels.get(cell_name).is_some() {return Some(String::from("Cell name has already been used"))}
 
     None
@@ -132,9 +132,15 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                 None => {}
             }
 
-            if ui.button("Create").clicked() && app.animation_cells_panel.cell_name.len() > 0 && is_cell_name_invalid(app).is_none() {
-                create_animation_cell(app)
-            }
+            ui.horizontal(|ui| {
+                if ui.button("Cancel").clicked() {
+                    app.animation_cells_panel.creation_modal_open = false;
+                }
+
+                if ui.button("Create").clicked() && app.animation_cells_panel.cell_name.len() > 0 && is_cell_name_invalid(app).is_none() {
+                    create_animation_cell(app)
+                }
+            });
         });
     } else if app.animation_cells_panel.deletion_confirmation_modal_open {
         Modal::new(Id::new("animation_cell_deletion")).show(ui.ctx(), |ui| {
