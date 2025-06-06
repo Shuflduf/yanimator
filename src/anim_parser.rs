@@ -1,5 +1,5 @@
 
-use egui::{frame, pos2, vec2, Color32, Rect, TextureHandle, Ui};
+use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {
@@ -383,7 +383,6 @@ impl Animation {
         for pos in frame_positions.into_iter() {
             let mut cel_name = String::new();
             let mut duration_str = String::new();
-            let mut frame_id = 0;
 
             i = pos + 1;
             while c.chars().nth(i) != Some(',') {
@@ -410,9 +409,9 @@ impl Animation {
             frames.push(AnimationFrame {
                 cell: cel_name,
                 duration,
-                id: frame_id
+                id: frames.len()
             });
-            frame_id += 1;
+            
             total_duration += duration as usize;
         }
 
@@ -508,7 +507,6 @@ impl Animation {
         let mut total_duration = 0;
         
         for frame in frames {
-            println!("{}", frame.id);
             positioned_frames.push(PositionedAnimationFrame {
                 cell: frame.cell.clone(),
                 position: total_duration,

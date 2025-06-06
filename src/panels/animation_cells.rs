@@ -1,5 +1,3 @@
-use std::cell;
-
 use egui::{include_image, vec2, Id, ImageButton, Modal, Ui};
 
 use crate::{anim_parser::AnimationCel, AppState, Yanimator};
@@ -83,7 +81,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         .striped(true)
         .spacing([40.0, 4.0])
         .show(ui, |ui| {
-            for (name, cell) in &app.animation_cels {
+            for (name, _cell) in &app.animation_cels {
                 ui.horizontal(|ui| {
                     ui.label(name);
                     

@@ -4,6 +4,8 @@ use crate::{anim_parser::Animation, AppState, Yanimator};
 
 pub struct Topbar {
     pub animation_creation_modal_open: bool,
+    animation_deletion_modal_open: bool,
+    deleting_anim: Option<String>,
     animation_name: String
 }
 
@@ -11,6 +13,8 @@ impl Topbar {
     pub fn init() -> Self {
         Self {
             animation_creation_modal_open: false,
+            animation_deletion_modal_open: false,
+            deleting_anim: None,
             animation_name: String::new()
         }
     }
@@ -38,6 +42,16 @@ fn create_animation(app: &mut Yanimator) {
     })
 }
 
+fn remove_animation(app: &mut Yanimator) {
+    if let Some(deleting_anim) = &app.topbar.deleting_anim {
+        let anim_pos = app.animations.iter().position(|anim| &anim.name == deleting_anim);
+        
+        if let Some(anim_pos) = anim_pos {
+            app.animations.remove(anim_pos);
+        }
+    }
+}
+
 pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
     egui::ScrollArea::horizontal()
     .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
@@ -46,12 +60,22 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
             let mut i = 0;
             
             for animation in &mut app.animations {
-                if ui.button(&animation.name).clicked() {
+                let button = ui.button(&animation.name);
+
+                if button.clicked() {
                     animation.current_frame = 0;
                     app.animation_id = i;
                     app.frames = 0;
                     app.timeline.keyframes.clear();
                 }
+
+                button.context_menu(|ui| {
+                    if ui.add(Button::image_and_text(include_image!("../../assets/delete.png"), "Delete")).clicked() {
+                        app.topbar.animation_deletion_modal_open = true;
+                        app.topbar.deleting_anim = Some(animation.name.clone());
+                        ui.close_menu();
+                    }
+                });
                 
                 i += 1;
             }
@@ -69,6 +93,7 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
             ui.separator();
             
             ui.label("Animation Name:");
+            
             let field = ui.text_edit_singleline(&mut app.topbar.animation_name);
             
             match is_anim_name_invalid(app) {
@@ -85,6 +110,26 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
                     create_animation(app)
                 }
             });
+        });
+    } else if app.topbar.animation_deletion_modal_open {
+        Modal::new(Id::new("animation_deletion")).show(ui.ctx(), |ui| {
+            if let Some(deleting_anim) = &app.topbar.deleting_anim {
+                ui.heading("Confirm Deletion");
+                ui.separator();
+
+                ui.label(format!("Are you sure you want to delete {}?", deleting_anim));
+
+                ui.horizontal(|ui| {
+                    if ui.button("Cancel").clicked() {
+                        app.topbar.animation_deletion_modal_open = false;
+                    }
+
+                    if ui.button("Delete").clicked() {
+                        remove_animation(app);
+                        app.topbar.animation_deletion_modal_open = false;
+                    }
+                });
+            }
         });
     }
 }

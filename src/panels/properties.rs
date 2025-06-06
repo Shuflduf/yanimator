@@ -53,8 +53,8 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         None => return,
     };
     
-    let sprites_len = app.spritesheet.sprites.len();
-    let palette_len = app.palette.palettes.len();
+    //let sprites_len = app.spritesheet.sprites.len();
+    //let palette_len = app.palette.palettes.len();
 
     egui::Grid::new("animation_cells")
         .num_columns(2)
