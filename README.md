@@ -2,6 +2,10 @@
 
 Animation editor for the Rhythm Tengoku decompilation (WIP)
 
+Yanimator currently technically has all the tools necessary to edit animations, but things are still very unstable and unpolished. It is not recommended to make a mod with this tool quite yet!
+
+Instructions on how to use the program will be added when the first stable release is finished.
+
 # To-do
 
 ### Exporting/Saving
@@ -10,6 +14,7 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 - [x] Export animation cells to a `_anim_cels.c` file
 - [x] Export animations to a `_anim.c` file
 - [ ] If .yan file is broken (missing `YAN` signature or animation offset is longer than file length), give an error popup instead of crashing
+- [ ] ...maybe .yan should just be a json file, it would allow for backwards compatibility if .yan changes, and would be a lot easier to edit externally...
 
 ### Animation/timeline editing
 
@@ -23,11 +28,15 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 - [x] Remove the "end" keyframe and make the total animation length a slider (the end keyframe hates me and causes a lot of issues)
 - [ ] Make timeline zooming centered on where mouse cursor is and not at the beginning of the timeline
 - [x] Adding animations (...idk how i missed this)
-- [ ] Removing animations
+- [x] Removing animations
+- [ ] Double click (or some other keybind) on a keyframe to open editor for it's AnimationCel
+- [ ] Make keyframes opposite color when in light mode
 
-### AnimationCell/OAM editing
+### AnimationCel/OAM editing
 
 - [x] Adding/removing animation cells
+- [ ] Sort AnimationCels properly in sidepanel
+- [ ] Put AnimationCels used in selected animation at top of sidepanel
 - [ ] Better visual for what OAM is selected (outline probably)
 - [ ] Properly clamp Tile ID based on shape and size
 - [ ] Ability to select Tile ID from spritesheet
@@ -37,6 +46,7 @@ Animation editor for the Rhythm Tengoku decompilation (WIP)
 ### QoL stuff
 
 - [ ] Preview of AnimationCells and OAMs in side panel, and maybe in timeline too (something like paint.net's layers window)
+- [ ] Undo/Redo
 
 # Attributions
 
