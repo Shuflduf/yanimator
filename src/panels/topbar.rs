@@ -1,4 +1,4 @@
-use egui::{include_image, Button, Id, ImageButton, Modal, Ui};
+use egui::{include_image, vec2, Button, Id, ImageButton, Modal, Ui};
 
 use crate::{anim_parser::Animation, AppState, Yanimator};
 
@@ -115,17 +115,17 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
         Modal::new(Id::new("animation_deletion")).show(ui.ctx(), |ui| {
             if let Some(deleting_anim) = &app.topbar.deleting_anim {
                 ui.heading("Confirm Deletion");
-                ui.separator();
+                let separator = ui.separator();
 
                 ui.label(format!("Are you sure you want to delete {}?", deleting_anim));
-
-                ui.horizontal(|ui| {
-                    if ui.button("Cancel").clicked() {
-                        app.topbar.animation_deletion_modal_open = false;
-                    }
-
+                
+                ui.allocate_ui_with_layout(vec2(separator.rect.width(), ui.available_height()), egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("Delete").clicked() {
                         remove_animation(app);
+                        app.topbar.animation_deletion_modal_open = false;
+                    }
+                    
+                    if ui.button("Cancel").clicked() {
                         app.topbar.animation_deletion_modal_open = false;
                     }
                 });

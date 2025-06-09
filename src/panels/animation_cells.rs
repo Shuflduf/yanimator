@@ -1,4 +1,5 @@
 use egui::{include_image, vec2, Id, ImageButton, Modal, Ui};
+use itertools::Itertools;
 
 use crate::{anim_parser::AnimationCel, AppState, Yanimator};
 
@@ -73,7 +74,32 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     });
     
     ui.separator();
+    
+    let mut sorted_cels = Vec::new();
+    
+    let mut used_cels = Vec::new();
+    
+    let animation = app.animations.get_mut(app.animation_id);
+    if let Some(animation) = animation {
+        for frame in &animation.frames {
+            if !used_cels.iter().any(|&cel| cel == &frame.cell) {
+                used_cels.push(&frame.cell);
+            }
+        }
+    }
+    
+    sorted_cels.append(&mut used_cels);
 
+    let animation_cels_keys: Vec<_> = app.animation_cels.keys().sorted().collect();
+
+    sorted_cels.append(&mut used_cels);
+
+    for cel in animation_cels_keys {
+        if !sorted_cels.iter().any(|&c| c == cel) {
+            sorted_cels.push(cel);
+        }
+    }
+    
     egui::ScrollArea::vertical()
     .show(ui, |ui| {
         egui::Grid::new("animation_cells")
@@ -81,16 +107,16 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         .striped(true)
         .spacing([40.0, 4.0])
         .show(ui, |ui| {
-            for (name, _cell) in &app.animation_cels {
+            for name in &sorted_cels {
                 ui.horizontal(|ui| {
-                    ui.label(name);
+                    ui.label(*name);
                     
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/edit.png"))).clicked() {
                             app.state = AppState::CellEditor;
                             app.editing_cell = name.clone();
                         }
-
+                        
                         if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/keyframe_add.png"))).clicked() {
                             let animation = app.animations.get_mut(app.animation_id);
                             
@@ -144,18 +170,18 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         Modal::new(Id::new("animation_cell_deletion")).show(ui.ctx(), |ui| {
             if let Some(deleting_cell) = &app.animation_cells_panel.deleting_cell {
                 ui.heading("Confirm Deletion");
-                ui.separator();
-
+                let seperator = ui.separator();
+                
                 ui.label(format!("Are you sure you want to delete {}?", deleting_cell));
                 ui.label("This will also remove it from all animations.");
-
-                ui.horizontal(|ui| {
-                    if ui.button("Cancel").clicked() {
-                        app.animation_cells_panel.deletion_confirmation_modal_open = false;
-                    }
-
+                
+                ui.allocate_ui_with_layout(vec2(seperator.rect.width(), ui.available_height()), egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("Delete").clicked() {
                         remove_animation_cell(app);
+                        app.animation_cells_panel.deletion_confirmation_modal_open = false;
+                    }
+                    
+                    if ui.button("Cancel").clicked() {
                         app.animation_cells_panel.deletion_confirmation_modal_open = false;
                     }
                 });
