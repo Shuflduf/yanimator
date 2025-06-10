@@ -75,30 +75,31 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     
     ui.separator();
     
-    let mut sorted_cels = Vec::new();
+    // i am not good enough at rust to deal with borrow checker issues like these,,,
+    // i might try and fix this later but i've literally been banging my head on the wall 
+    // for like 3 hours because of this
     
+    /*let mut sorted_cels = Vec::new();
+    
+
     let mut used_cels = Vec::new();
-    
-    let animation = app.animations.get_mut(app.animation_id);
-    if let Some(animation) = animation {
-        for frame in &animation.frames {
-            if !used_cels.iter().any(|&cel| cel == &frame.cell) {
-                used_cels.push(&frame.cell);
-            }
+    {
+        let animation = app.animations.get(app.animation_id);
+
+        if let Some(animation) = animation {
+            used_cels = animation.get_used_cels();
         }
     }
     
     sorted_cels.append(&mut used_cels);
 
-    let animation_cels_keys: Vec<_> = app.animation_cels.keys().sorted().collect();
-
-    sorted_cels.append(&mut used_cels);
+    let animation_cels_keys: Vec<_> = app.animation_cels.keys().clone().sorted().collect();
 
     for cel in animation_cels_keys {
         if !sorted_cels.iter().any(|&c| c == cel) {
             sorted_cels.push(cel);
         }
-    }
+    }*/
     
     egui::ScrollArea::vertical()
     .show(ui, |ui| {
@@ -107,26 +108,24 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         .striped(true)
         .spacing([40.0, 4.0])
         .show(ui, |ui| {
-            for name in &sorted_cels {
+            for name in app.animation_cels.keys().sorted() {
                 ui.horizontal(|ui| {
-                    ui.label(*name);
+                    ui.label(name);
                     
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/edit.png"))).clicked() {
                             app.state = AppState::CellEditor;
-                            app.editing_cell = name.clone();
+                            app.editing_cell = String::from(name);
                         }
                         
                         if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/keyframe_add.png"))).clicked() {
-                            let animation = app.animations.get_mut(app.animation_id);
-                            
-                            if let Some(animation) = animation {
-                                animation.insert_anim_frame(name.clone(), app.frames as isize);
+                            if let Some(animation) = app.animations.get_mut(app.animation_id) {
+                                animation.insert_anim_frame(String::from(name), app.frames as isize);
                             }
                         }
 
                         if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/delete.png"))).clicked() {
-                            app.animation_cells_panel.deleting_cell = Some(name.clone());
+                            app.animation_cells_panel.deleting_cell = Some(String::from(name));
                             app.animation_cells_panel.deletion_confirmation_modal_open = true;
                         }
                     });

@@ -598,4 +598,15 @@ impl Animation {
             frame.duration = (self.duration - minimum_duration) as u8;
         }
     }
+    pub fn get_used_cels(&self) -> Vec<&String> {
+        let mut used_cels = Vec::new();
+
+        for frame in &self.frames {
+            if !used_cels.iter().any(|&cel| cel == &frame.cell) {
+                used_cels.push(&frame.cell);
+            }
+        }
+
+        used_cels
+    }
 }
