@@ -1,4 +1,4 @@
-use egui::{include_image, vec2, Id, ImageButton, Modal, Ui};
+use egui::{include_image, pos2, vec2, Button, Frame, Id, ImageButton, Modal, Rect, Scene, Sense, Ui};
 use itertools::Itertools;
 
 use crate::{anim_parser::AnimationCel, AppState, Yanimator};
@@ -78,7 +78,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     // i am not good enough at rust to deal with borrow checker issues like these,,,
     // i might try and fix this later but i've literally been banging my head on the wall 
     // for like 3 hours because of this
-    
+
     /*let mut sorted_cels = Vec::new();
     
 
@@ -103,19 +103,55 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     
     egui::ScrollArea::vertical()
     .show(ui, |ui| {
-        egui::Grid::new("animation_cells")
+        /*egui::Grid::new("animation_cells")
         .num_columns(1)
         .striped(true)
         .spacing([40.0, 4.0])
-        .show(ui, |ui| {
+        .show(ui, |ui| {*/
             for name in app.animation_cels.keys().sorted() {
+                let cel = app.animation_cels.get(name).unwrap();
+
                 ui.horizontal(|ui| {
-                    ui.label(name);
+                    let button = ui.add(Button::new(name).min_size(vec2(ui.available_width(), 20.0)));
                     
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/edit.png"))).clicked() {
+                    if button.double_clicked() {
+                        app.state = AppState::CellEditor;
+                        app.editing_cell = String::from(name);
+                    }
+
+                    button.context_menu(|ui| {
+                        if ui.add(Button::image_and_text(include_image!("../../assets/edit.png"), "Edit")).clicked() {
                             app.state = AppState::CellEditor;
                             app.editing_cell = String::from(name);
+                            ui.close_menu();
+                        }
+
+                        if ui.add(Button::image_and_text(include_image!("../../assets/delete.png"), "Delete")).clicked() {
+                            app.animation_cells_panel.deleting_cell = Some(String::from(name));
+                            app.animation_cells_panel.deletion_confirmation_modal_open = true;
+                            ui.close_menu();
+                        }
+
+                        if ui.add(Button::image_and_text(include_image!("../../assets/keyframe_add.png"), "Insert Keyframe")).clicked() {
+                            if let Some(animation) = app.animations.get_mut(app.animation_id) {
+                                animation.insert_anim_frame(String::from(name), app.frames as isize);
+                            }
+
+                            ui.close_menu();
+                        }
+                    });
+
+                    button.on_hover_ui_at_pointer(|ui| {                        
+                        Scene::default()
+                            .zoom_range(0.1..=4.0)
+                            .show(ui, &mut app.viewport_rect, |ui| {
+                                cel.draw(&app.textures, ui);
+                            });
+                    });
+
+                    /*ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/edit.png"))).clicked() {
+                           
                         }
                         
                         if ui.add_sized(vec2(20.0, 20.0), ImageButton::new(include_image!("../../assets/keyframe_add.png"))).clicked() {
@@ -128,12 +164,10 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                             app.animation_cells_panel.deleting_cell = Some(String::from(name));
                             app.animation_cells_panel.deletion_confirmation_modal_open = true;
                         }
-                    });
+                    });*/
                 });
-                
-                ui.end_row();
             }
-        });
+        //});
         
     });
 

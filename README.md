@@ -35,7 +35,8 @@ Instructions on how to use the program will be added when the first stable relea
 ### AnimationCel/OAM editing
 
 - [x] Adding/removing animation cells
-- [ ] Sort AnimationCels properly in sidepanel
+- [x] Sort AnimationCels properly in sidepanel
+- [x] Put buttons next to AnimationCels in a right click menu instead
 - [ ] Put AnimationCels used in selected animation at top of sidepanel
 - [ ] Better visual for what OAM is selected (outline probably)
 - [ ] Properly clamp Tile ID based on shape and size
