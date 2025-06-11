@@ -239,7 +239,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                         });
                     });
                 }
-
+                
                 pos += frame.duration as f32;
             }
         }

@@ -141,6 +141,12 @@ pub fn ui_cell_editor(ui: &mut Ui, app: &mut Yanimator) {
         ui.horizontal(|ui| {
             if ui.add(ImageButton::new(include_image!("../../assets/back.png"))).clicked() {
                 app.state = AppState::AnimationEditor;
+                
+                for (_, cell) in &mut app.animation_cels {
+                    for oam in &mut cell.oams {
+                        oam.selected = false;
+                    }
+                }
             };
             
             ui.label(format!("{}", app.editing_cell));
