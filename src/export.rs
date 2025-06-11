@@ -1,5 +1,7 @@
 use std::{collections::HashMap, fs, io::Write};
 
+use serde::{Deserialize, Serialize};
+
 use crate::anim_parser::{Animation, AnimationCel, OAMFlip, OAMShape, OAMSize};
 
 /*
@@ -38,6 +40,12 @@ For each animation:
         0x00 seperator byte
         Frame duration (1 byte)
 */
+
+#[derive(Deserialize, Serialize)]
+struct ProjectStructure {
+    animation_cels: HashMap<String, AnimationCel>,
+    animations: Vec<Animation>
+}
 
 pub fn create_project_bin(path: &str, animation_cells: &HashMap<String, AnimationCel>, animations: &Vec<Animation>) {
     let mut bytes: Vec<u8> = Vec::new();
@@ -106,6 +114,22 @@ pub fn create_project_bin(path: &str, animation_cells: &HashMap<String, Animatio
     if let Ok(mut file) = export {
         let _ = file.write_all(&bytes);
     }    
+}
+
+pub fn create_project_json(path: &str, animation_cells: &HashMap<String, AnimationCel>, animations: &Vec<Animation>) {
+    let project = ProjectStructure {
+        animation_cels: animation_cells.clone(),
+        animations: animations.clone()
+    };
+
+    let export = fs::File::create(path);
+    
+    if let Ok(mut file) = export {
+        if let Ok(bytes) = serde_json::to_vec_pretty(&project) {
+            let _ = file.write_all(&bytes);
+        }
+        
+    }   
 }
 
 pub fn export_animation_cels(path: &str, animation_cells: &HashMap<String, AnimationCel>) {

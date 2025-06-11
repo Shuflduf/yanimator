@@ -46,7 +46,7 @@ fn save_project(app: &mut Yanimator) {
         None => return
     };
     
-    crate::export::create_project_bin(path_str, &app.animation_cels, &app.animations);
+    crate::export::create_project_json(path_str, &app.animation_cels, &app.animations);
 }
 
 fn load_palette(ui: &mut Ui, app: &mut Yanimator) {

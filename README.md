@@ -43,6 +43,7 @@ Instructions on how to use the program will be added when the first stable relea
 - [ ] Ability to select Tile ID from spritesheet
 - [ ] Ability to select multiple OAMs
 - [ ] Move tool with snapping
+- [ ] Arrow keys for more precise OAM movement
 
 ### QoL stuff
 

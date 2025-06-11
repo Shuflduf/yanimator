@@ -1,21 +1,22 @@
 
 use egui::{pos2, vec2, Color32, Rect, Stroke, TextureHandle, Ui};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum OAMShape {
     Square,
     Horizontal,
     Vertical
 }
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum OAMSize {
     Size0,
     Size1,
     Size2,
     Size3
 }
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum OAMFlip {
     None,
     Horizontal,
@@ -23,7 +24,7 @@ pub enum OAMFlip {
     Both
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OAM {
     pub shape: OAMShape,
     pub size: OAMSize,
@@ -32,6 +33,7 @@ pub struct OAM {
     pub y: i8,
     pub palette: usize,
     pub tile: usize,
+    #[serde(skip)]
     pub selected: bool
 }
 
@@ -270,6 +272,7 @@ impl OAM {
     }
 }
 
+#[derive(Deserialize, Serialize, Clone)]
 pub struct AnimationCel {
     pub name: String,
     pub oams: Vec<OAM>
@@ -351,9 +354,11 @@ impl AnimationCel {
 }
 
 
+#[derive(Deserialize, Serialize, Clone)]
 pub struct AnimationFrame {
     pub cell: String,
     pub duration: u8,
+    #[serde(skip)]
     pub id: usize
 }
 
@@ -363,10 +368,13 @@ pub struct PositionedAnimationFrame {
     id: usize
 }
 
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Animation {
     pub frames: Vec<AnimationFrame>,
     pub name: String,
+    #[serde(skip)]
     pub current_frame: usize,
+    #[serde(skip)]
     pub duration: usize
 }
 
