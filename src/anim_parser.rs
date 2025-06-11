@@ -1,5 +1,6 @@
 
 use egui::{pos2, vec2, Color32, Rect, Stroke, TextureHandle, Ui};
+use regex::Regex;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {
@@ -283,42 +284,26 @@ fn parse_hex_string(string: &str) -> Option<u8> {
 
 impl AnimationCel {
     pub fn from_c(c: &str, name: &str) -> Option<AnimationCel> {
-        let length_start = c.find("/* Len */ ")? + 10;
-        /*let mut length_str: String = String::from("");
-        let length: usize;
+        let oam_regex = Regex::new(r"0x[0-9a-fA-F]{4}").unwrap();
 
-        for i in length_start..length_start + 3 {
-            if c.chars().nth(i) != Some(',') {
-                length_str.push(c.chars().nth(i).unwrap());
-            } else {
-                break;
-            }
-        }
-
-        length = match length_str.parse() {
-            Ok(value) => value,
-            Err(_) => return None,
-        };*/
-
-        let mut oam_positions = Vec::new();
-        let mut i = length_start + 2;
-
-        while let Some(pos) = c[i..].find("*/ ") {
-            oam_positions.push(i + pos);
-            i += pos + 4;
-        }
+        let words: Vec<_> = oam_regex.find_iter(c).map(|m| m.as_str()).collect();
+        let mut i = 0;
 
         let mut oams: Vec<OAM> = Vec::new();
 
-        for pos in oam_positions.into_iter() {
+        while i < words.len() {
             let mut bytes: Vec<u8> = Vec::new();
-            
-            let byte1 = parse_hex_string(&c[pos+5..pos+7])?;
-            let byte2 = parse_hex_string(&c[pos+7..pos+9])?;
-            let byte3 = parse_hex_string(&c[pos+13..pos+15])?;
-            let byte4 = parse_hex_string(&c[pos+15..pos+17])?;
-            let byte5 = parse_hex_string(&c[pos+21..pos+23])?;
-            let byte6 = parse_hex_string(&c[pos+23..pos+25])?;
+
+            let word1 = words.get(i)?;
+            let word2 = words.get(i + 1)?;
+            let word3 = words.get(i + 2)?;
+
+            let byte1 = parse_hex_string(&word1[2..4])?;
+            let byte2 = parse_hex_string(&word1[4..6])?;
+            let byte3 = parse_hex_string(&word2[2..4])?;
+            let byte4 = parse_hex_string(&word2[4..6])?;
+            let byte5 = parse_hex_string(&word3[2..4])?;
+            let byte6 = parse_hex_string(&word3[4..6])?;
             
             bytes.push(byte1);
             bytes.push(byte2);
@@ -326,6 +311,8 @@ impl AnimationCel {
             bytes.push(byte4);
             bytes.push(byte5);
             bytes.push(byte6);
+
+            i += 3;
 
             let oam = OAM::new(&bytes);
             oams.push(oam);
