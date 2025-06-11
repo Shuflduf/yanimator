@@ -1,5 +1,5 @@
 
-use egui::{pos2, vec2, Color32, Rect, TextureHandle, Ui};
+use egui::{pos2, vec2, Color32, Rect, Stroke, TextureHandle, Ui};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum OAMShape {
@@ -124,33 +124,36 @@ impl OAM {
 
         OAM {shape, size, flip, x, y, palette, tile, selected: false}
     }
+    
+    pub fn get_width_and_height(&self) -> (usize, usize) {
+        match self.shape {
+            OAMShape::Square => match self.size {
+                OAMSize::Size0 => (1, 1),
+                OAMSize::Size1 => (2, 2),
+                OAMSize::Size2 => (4, 4),
+                OAMSize::Size3 => (8, 8),
+            },
+            OAMShape::Horizontal => match self.size {
+                OAMSize::Size0 => (2, 1),
+                OAMSize::Size1 => (4, 1),
+                OAMSize::Size2 => (4, 2),
+                OAMSize::Size3 => (8, 4),
+            },
+            OAMShape::Vertical => match self.size {
+                OAMSize::Size0 => (1, 2),
+                OAMSize::Size1 => (1, 4),
+                OAMSize::Size2 => (2, 4),
+                OAMSize::Size3 => (4, 8),
+            }
+        }
+    }
 
     pub fn get_sprite_indexes(&self) -> Vec<Vec<usize>> {
         let mut sprite_indexes: Vec<Vec<usize>> = Vec::new();
         
-        let width: usize;
-        let height: usize;
+        let (width, height) = self.get_width_and_height();
         
-        match self.shape {
-            OAMShape::Square => match self.size {
-                OAMSize::Size0 => { width = 1; height = 1; },
-                OAMSize::Size1 => { width = 2; height = 2; },
-                OAMSize::Size2 => { width = 4; height = 4; },
-                OAMSize::Size3 => { width = 8; height = 8; },
-            },
-            OAMShape::Horizontal => match self.size {
-                OAMSize::Size0 => { width = 2; height = 1; },
-                OAMSize::Size1 => { width = 4; height = 1; },
-                OAMSize::Size2 => { width = 4; height = 2; },
-                OAMSize::Size3 => { width = 8; height = 4; },
-            },
-            OAMShape::Vertical => match self.size {
-                OAMSize::Size0 => { width = 1; height = 2; },
-                OAMSize::Size1 => { width = 1; height = 4; },
-                OAMSize::Size2 => { width = 2; height = 4; },
-                OAMSize::Size3 => { width = 4; height = 8; },
-            }
-        }
+        
         
         let mut y_range: Vec<usize> = (0..height).collect();
         let mut x_range: Vec<usize> = (0..width).collect();
@@ -199,15 +202,18 @@ impl OAM {
         let oam_sprites = self.get_sprite_indexes();
             
         let sprite_size = 20.0;
-        for y in 0..oam_sprites.len() {
-            for x in 0..oam_sprites[y].len() {
+        let (width, height) = self.get_width_and_height();
+
+        for y in 0..height {
+            for x in 0..width {
+                
                 let texture_sheet = match textures.get(self.palette) {
                     Some(texture) => texture,
                     None => continue
                 };
 
                 if oam_sprites[y][x] >= texture_sheet.len() {continue;}
-
+                
                 let rect = egui::Rect::from_min_size(
                     pos2(
                         (x as f32) * sprite_size + (self.x as f32) * sprite_size / 8.0, 
@@ -238,6 +244,7 @@ impl OAM {
                     }
 
                     if self.selected {
+                        
                         texture = texture.tint(Color32::LIGHT_GREEN);
                     }
                     
@@ -249,6 +256,16 @@ impl OAM {
                 //ui.allocate_space(vec2(sprite_size, sprite_size));
             }
         }
+
+        if self.selected {
+            ui.painter().rect_stroke(
+                Rect::from_min_size(pos2((self.x as f32) * sprite_size / 8.0, (self.y as f32) * sprite_size / 8.0), vec2(sprite_size * width as f32, sprite_size * height as f32)), 
+                0, 
+                Stroke::new(2.0, Color32::RED), 
+                egui::StrokeKind::Outside
+            );
+        }
+        
     }
 }
 

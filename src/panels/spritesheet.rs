@@ -45,6 +45,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
             
             if oam.get_sprite_indexes_one_dimensional().iter().find(|&&x| x == i).is_some() {
                 texture = texture.tint(Color32::LIGHT_GREEN);
+                
             }
 
             let sprite = ui.add(texture);
