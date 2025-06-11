@@ -1,4 +1,4 @@
-use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Key, PointerButton, Rect, Stroke, Ui};
+use egui::{include_image, pos2, vec2, Color32, Image, ImageButton, InputState, Key, PointerButton, Rect, Response, Scene, Stroke, Ui};
 
 use crate::Yanimator;
 
@@ -64,7 +64,7 @@ impl Timeline {
 const KEYFRAME_SIZE: f32 = 30.0;
 const SCROLL_SPEED: f32 = 10.0;
 
-fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i: usize) {
+fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i: usize) -> Response {
     let keyframe_rect = egui::Rect::from_min_size(
         pos2(
             pos * timeline.zoom + timeline.scroll, 
@@ -83,11 +83,13 @@ fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i:
 
     timeline.update_keyframe(input_rect, i);
     
-    ui.put(keyframe_rect, |ui: &mut Ui| {
+    let response = ui.put(keyframe_rect, |ui: &mut Ui| {
         let mut source = Image::new(include_image!("../../assets/keyframe.png"));
 
         if timeline.is_keyframe_hovered(i) {
             source = source.tint(Color32::GRAY);
+
+            
         }
 
         if timeline.is_keyframe_selected(i) {
@@ -104,7 +106,7 @@ fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i:
     if timeline.dragging && timeline.is_keyframe_selected(i) {
         let mouse_pos = ui.ctx().input(|i| i.pointer.latest_pos().unwrap_or(pos2(0.0, 0.0)));
         let dragged_rect = keyframe_rect.translate(vec2(((mouse_pos.x - timeline.start_drag_x) / timeline.zoom).round() * timeline.zoom, 0.0));
-
+        
         ui.put(dragged_rect, |ui: &mut Ui| {
             let mut source = Image::new(include_image!("../../assets/keyframe.png"));
 
@@ -114,6 +116,8 @@ fn draw_keyframe(ui: &mut Ui, height: f32, timeline: &mut Timeline, pos: f32, i:
             ui.add(source)
         });
     }
+
+    response
 }
 
 pub fn ui(ui: &mut Ui, app: &mut Yanimator) {  
@@ -218,7 +222,24 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
         let animation = app.animations.get_mut(app.animation_id);
         if let Some(animation) = animation {
             for frame in &animation.frames {
-                draw_keyframe(ui, height, &mut app.timeline, pos, frame.id);
+                let keyframe = draw_keyframe(ui, height, &mut app.timeline, pos, frame.id);
+                let cel = app.animation_cels.get(&frame.cell);
+
+                if let Some(cel) = cel {
+                    keyframe.on_hover_ui_at_pointer(|ui| {    
+                        ui.label(&frame.cell);
+
+                        ui.allocate_ui(vec2(100.0, 100.0), |ui| {
+                            let mut rect = Rect::ZERO;                    
+                            Scene::default()
+                                .zoom_range(0.5..=0.5)
+                                .show(ui, &mut rect, |ui| {
+                                    cel.draw(&app.textures, ui);
+                                });
+                        });
+                    });
+                }
+
                 pos += frame.duration as f32;
             }
         }

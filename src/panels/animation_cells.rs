@@ -141,12 +141,15 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                         }
                     });
 
-                    button.on_hover_ui_at_pointer(|ui| {                        
-                        Scene::default()
-                            .zoom_range(0.1..=4.0)
-                            .show(ui, &mut app.viewport_rect, |ui| {
-                                cel.draw(&app.textures, ui);
-                            });
+                    button.on_hover_ui_at_pointer(|ui| {    
+                        ui.allocate_ui(vec2(100.0, 100.0), |ui| {
+                            let mut rect = Rect::ZERO;                    
+                            Scene::default()
+                                .zoom_range(0.5..=0.5)
+                                .show(ui, &mut rect, |ui| {
+                                    cel.draw(&app.textures, ui);
+                                });
+                        });
                     });
 
                     /*ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
