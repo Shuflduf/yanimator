@@ -12,7 +12,7 @@ const SAVE_PROJECT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::CTRL, Ke
 
 fn open_project(app: &mut Yanimator) {
     let file_path: PathBuf = match FileDialog::new()
-    .add_filter("Yanimator project", &["yan"])
+    .add_filter("Yanimator project", &["json"])
     .set_directory("/")
     .set_title("Select a Yanimator project")
     .pick_file() {
@@ -25,15 +25,19 @@ fn open_project(app: &mut Yanimator) {
         None => return
     };
     
-    let (animation_cels, animations) = import::load_project(path_str);
+    if let Ok((animation_cels, animations)) = import::load_project_json(path_str) {
+        app.animations = animations;
+        app.animation_cels = animation_cels;
+    }
+
+    //let (animation_cels, animations) = import::load_project(path_str);
     
-    app.animations = animations;
-    app.animation_cels = animation_cels;
+    
 }
 
 fn save_project(app: &mut Yanimator) {
     let file_path: PathBuf = match FileDialog::new()
-    .add_filter("Yanimator project", &["yan"])
+    .add_filter("Yanimator project", &["json"])
     .set_directory("/")
     .set_title("Select save location")
     .save_file() {

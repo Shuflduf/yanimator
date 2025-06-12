@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-use crate::anim_parser::{Animation, AnimationCel};
+use crate::{anim_parser::{Animation, AnimationCel}, ProjectStructure};
 
 pub fn load_project(path_str: &str) -> (HashMap<String, AnimationCel>, Vec<Animation>) {
     let project_bytes = fs::read(path_str).unwrap();
@@ -84,6 +84,17 @@ pub fn load_project(path_str: &str) -> (HashMap<String, AnimationCel>, Vec<Anima
     }
 
     (animation_cels, animations)
+}
+
+pub fn load_project_json(path_str: &str) -> Result<(HashMap<String, AnimationCel>, Vec<Animation>), serde_json::Error> {
+    let project_str = fs::read(path_str).unwrap();
+    let mut project: ProjectStructure = serde_json::from_slice(&project_str)?;
+
+    for animation in &mut project.animations {
+        animation.duration = animation.get_total_frames();
+    }
+
+    Ok((project.animation_cels, project.animations))
 }
 
 pub fn load_animation_cels_from_c(path_str: &str) -> HashMap<String, AnimationCel> {

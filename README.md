@@ -13,8 +13,7 @@ Instructions on how to use the program will be added when the first stable relea
 - [x] Put animations in the `cells.bin` so it can be renamed something like `(project name).yan` for easier sharing
 - [x] Export animation cells to a `_anim_cels.c` file
 - [x] Export animations to a `_anim.c` file
-- [ ] If .yan file is broken (missing `YAN` signature or animation offset is longer than file length), give an error popup instead of crashing
-- [ ] ...maybe .yan should just be a json file, it would allow for backwards compatibility if .yan changes, and would be a lot easier to edit externally...
+- [x] ...maybe .yan should just be a json file, it would allow for backwards compatibility if .yan changes, and would be a lot easier to edit externally...
 
 ### Animation/timeline editing
 
@@ -38,7 +37,8 @@ Instructions on how to use the program will be added when the first stable relea
 - [x] Sort AnimationCels properly in sidepanel
 - [x] Put buttons next to AnimationCels in a right click menu instead
 - [ ] Put AnimationCels used in selected animation at top of sidepanel
-- [ ] Better visual for what OAM is selected (outline probably)
+- [x] Better visual for what OAM is selected (outline probably)
+- [ ] Toggle visibility of selection border
 - [ ] Properly clamp Tile ID based on shape and size
 - [ ] Ability to select Tile ID from spritesheet
 - [ ] Ability to select multiple OAMs
@@ -47,7 +47,7 @@ Instructions on how to use the program will be added when the first stable relea
 
 ### QoL stuff
 
-- [ ] Preview of AnimationCells and OAMs in side panel, and maybe in timeline too (something like paint.net's layers window)
+- [x] Preview of AnimationCells and OAMs in side panel, and maybe in timeline too (something like paint.net's layers window)
 - [ ] Undo/Redo
 
 # Attributions

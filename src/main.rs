@@ -6,6 +6,7 @@ use egui::{Rect, TextureHandle, Visuals};
 use egui_extras::install_image_loaders;
 use palette_parser::Palette;
 use panels::{animation_cells::AnimationCellsPanel, timeline::Timeline};
+use serde::{Deserialize, Serialize};
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
@@ -51,7 +52,12 @@ struct Yanimator {
     timeline: Timeline,
     animation_cells_panel: AnimationCellsPanel,
     topbar: Topbar,
-    
+}
+
+#[derive(Deserialize, Serialize)]
+struct ProjectStructure {
+    animation_cels: HashMap<String, AnimationCel>,
+    animations: Vec<Animation>
 }
 
 impl Yanimator {

@@ -4,4 +4,5 @@
 *.c
 *.bin
 *.yan
+*.json
 .vscode

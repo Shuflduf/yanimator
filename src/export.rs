@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, io::Write};
 
 use serde::{Deserialize, Serialize};
 
-use crate::anim_parser::{Animation, AnimationCel, OAMFlip, OAMShape, OAMSize};
+use crate::{anim_parser::{Animation, AnimationCel, OAMFlip, OAMShape, OAMSize}, ProjectStructure};
 
 /*
     
@@ -41,11 +41,7 @@ For each animation:
         Frame duration (1 byte)
 */
 
-#[derive(Deserialize, Serialize)]
-struct ProjectStructure {
-    animation_cels: HashMap<String, AnimationCel>,
-    animations: Vec<Animation>
-}
+
 
 pub fn create_project_bin(path: &str, animation_cells: &HashMap<String, AnimationCel>, animations: &Vec<Animation>) {
     let mut bytes: Vec<u8> = Vec::new();
@@ -128,7 +124,6 @@ pub fn create_project_json(path: &str, animation_cells: &HashMap<String, Animati
         if let Ok(bytes) = serde_json::to_vec_pretty(&project) {
             let _ = file.write_all(&bytes);
         }
-        
     }   
 }
 
