@@ -116,7 +116,16 @@ impl eframe::App for Yanimator {
         ctx.request_repaint();
         
         ctx.input(|i| {
-            panels::timeline::input(i, self);
+            match self.state {
+                AppState::AnimationEditor => {
+                    panels::timeline::input(i, self);
+
+                },
+                AppState::CellEditor => {
+                    panels::properties::input(i, self);
+                }
+            }
+            
         });
 
         egui::TopBottomPanel::top("menu")

@@ -1,4 +1,4 @@
-use egui::Ui;
+use egui::{InputState, Key, Ui};
 
 use crate::{anim_parser::{OAMFlip, OAMShape, OAMSize}, Yanimator};
 
@@ -133,4 +133,32 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
     );
 
     ui.allocate_rect(rect, egui::Sense::hover());
+}
+
+pub fn input(input: &InputState, app: &mut Yanimator) {
+    let cell  = match app.animation_cels.get_mut(&app.editing_cell) {
+        Some(cell) => cell,
+        None => return,
+    };
+    
+    let oam = match cell.oams.get_mut(app.editing_oam) {
+        Some(oam) => oam,
+        None => return,
+    };
+
+    if input.key_pressed(Key::ArrowUp) {
+        oam.y -= 1;
+    }
+
+    if input.key_pressed(Key::ArrowDown) {
+        oam.y += 1;
+    }
+
+    if input.key_pressed(Key::ArrowLeft) {
+        oam.x -= 1;
+    }
+
+    if input.key_pressed(Key::ArrowRight) {
+        oam.x += 1;
+    }
 }

@@ -14,6 +14,7 @@ Instructions on how to use the program will be added when the first stable relea
 - [x] Export animation cells to a `_anim_cels.c` file
 - [x] Export animations to a `_anim.c` file
 - [x] ...maybe .yan should just be a json file, it would allow for backwards compatibility if .yan changes, and would be a lot easier to edit externally...
+- [ ] Put path to spritesheet and palette in json so it can be autoloaded
 
 ### Animation/timeline editing
 
@@ -38,17 +39,24 @@ Instructions on how to use the program will be added when the first stable relea
 - [x] Put buttons next to AnimationCels in a right click menu instead
 - [ ] Put AnimationCels used in selected animation at top of sidepanel
 - [x] Better visual for what OAM is selected (outline probably)
-- [ ] Toggle visibility of selection border
+- [x] Toggle visibility of selection border
 - [ ] Properly clamp Tile ID based on shape and size
 - [ ] Ability to select Tile ID from spritesheet
 - [ ] Ability to select multiple OAMs
 - [ ] Move tool with snapping
-- [ ] Arrow keys for more precise OAM movement
+- [x] Arrow keys for more precise OAM movement
+
+### Viewport
+
+- [ ] Checkered background
+- [ ] X and Y coordinate lines
+- [ ] Ability to reset viewport position/zoom to Rect::ZERO
 
 ### QoL stuff
 
 - [x] Preview of AnimationCells and OAMs in side panel, and maybe in timeline too (something like paint.net's layers window)
 - [ ] Undo/Redo
+- [ ] Ability to add custom background to viewport to align stuff to backgrounds/references
 
 # Attributions
 
