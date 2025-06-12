@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use sprite_parser::Spritesheet;
 use anim_parser::{Animation, AnimationCel};
 
-use crate::panels::topbar::Topbar;
+use crate::panels::{topbar::Topbar, viewport::Viewport};
 
 mod palette_parser;
 mod sprite_parser;
@@ -46,12 +46,13 @@ struct Yanimator {
     animations: Vec<Animation>,
     last_frame_time: Instant,
     frames: usize,
-    viewport_rect: Rect,
+   
     spritesheet_palette: usize,
 
     timeline: Timeline,
     animation_cells_panel: AnimationCellsPanel,
     topbar: Topbar,
+    viewport: Viewport
 }
 
 #[derive(Deserialize, Serialize)]
@@ -78,10 +79,10 @@ impl Yanimator {
             animations,
             last_frame_time: Instant::now(),
             frames: 0,
-            viewport_rect: Rect::ZERO,
             timeline: Timeline::init(),
             animation_cells_panel: AnimationCellsPanel::init(),
             topbar: Topbar::init(),
+            viewport: Viewport::init(),
             editing_cell: String::from(""),
             editing_oam: 0,
             spritesheet_palette: 0

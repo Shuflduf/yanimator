@@ -150,6 +150,10 @@ pub fn ui_cell_editor(ui: &mut Ui, app: &mut Yanimator) {
             };
             
             ui.label(format!("{}", app.editing_cell));
+
+            ui.separator();
+
+            ui.checkbox(&mut app.viewport.selection_indicator_enabled, "Toggle Selection Indicator");
         });
     });
 }

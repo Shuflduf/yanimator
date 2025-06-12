@@ -1,11 +1,26 @@
-use egui::{Scene, Ui};
+use egui::{Rect, Scene, Ui};
+use image::flat::View;
 
 use crate::{AppState, Yanimator};
+
+pub struct Viewport {
+    scene_rect: Rect,
+    pub selection_indicator_enabled: bool
+}
+
+impl Viewport {
+    pub fn init() -> Self {
+        Viewport {
+            scene_rect: Rect::ZERO,
+            selection_indicator_enabled: true
+        }
+    }
+}
 
 pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
     Scene::default()
     .zoom_range(0.1..=4.0)
-    .show(ui, &mut app.viewport_rect, |ui| {
+    .show(ui, &mut app.viewport.scene_rect, |ui| {
     
     //let animation = &app.animations[app.animation_id];
     
@@ -13,7 +28,7 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
     if let Some(animation) = animation {
         if let Some(frame) = animation.frames.get(animation.current_frame) {
             if let Some(animation_cel) = app.animation_cels.get(&frame.cell) {
-                animation_cel.draw(&app.textures, ui);
+                animation_cel.draw(&app.textures, ui, false);
             }
         }
         
@@ -26,7 +41,7 @@ pub fn ui_animation_editor(ui: &mut Ui, app: &mut Yanimator) {
 pub fn ui_cell_editor(ui: &mut Ui, app: &mut Yanimator) {
     Scene::default()
     .zoom_range(0.1..=4.0)
-    .show(ui, &mut app.viewport_rect, |ui| {
+    .show(ui, &mut app.viewport.scene_rect, |ui| {
 
     //let animation = &app.animations[app.animation_id];
 
@@ -37,7 +52,7 @@ pub fn ui_cell_editor(ui: &mut Ui, app: &mut Yanimator) {
             i += 1;
         }
         
-        animation_cel.draw(&app.textures, ui);
+        animation_cel.draw(&app.textures, ui, app.viewport.selection_indicator_enabled);
     }
 
     });

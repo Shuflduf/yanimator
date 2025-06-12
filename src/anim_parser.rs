@@ -201,7 +201,7 @@ impl OAM {
         return indexes;
     }
 
-    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui, selection_indicator_enabled: bool) {
         let oam_sprites = self.get_sprite_indexes();
             
         let sprite_size = 20.0;
@@ -246,7 +246,7 @@ impl OAM {
                         _ => {}
                     }
 
-                    if self.selected {
+                    if self.selected && selection_indicator_enabled {
                         
                         texture = texture.tint(Color32::LIGHT_GREEN);
                     }
@@ -260,7 +260,7 @@ impl OAM {
             }
         }
 
-        if self.selected {
+        if self.selected && selection_indicator_enabled {
             ui.painter().rect_stroke(
                 Rect::from_min_size(pos2((self.x as f32) * sprite_size / 8.0, (self.y as f32) * sprite_size / 8.0), vec2(sprite_size * width as f32, sprite_size * height as f32)), 
                 0, 
@@ -346,9 +346,9 @@ impl AnimationCel {
         Some(AnimationCel { name, oams })
     }
 
-    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui) {
+    pub fn draw(&self, textures: &Vec<Vec<TextureHandle>>, ui: &mut Ui, selection_indicator_enabled: bool) {
         for oam in self.oams.iter().rev() {
-            oam.draw(textures, ui);
+            oam.draw(textures, ui, selection_indicator_enabled);
         }
     }
 }

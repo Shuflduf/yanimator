@@ -234,7 +234,7 @@ pub fn ui(ui: &mut Ui, app: &mut Yanimator) {
                             Scene::default()
                                 .zoom_range(0.5..=0.5)
                                 .show(ui, &mut rect, |ui| {
-                                    cel.draw(&app.textures, ui);
+                                    cel.draw(&app.textures, ui, false);
                                 });
                         });
                     });
