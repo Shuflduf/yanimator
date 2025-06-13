@@ -15,6 +15,9 @@ Instructions on how to use the program will be added when the first stable relea
 - [x] Export animations to a `_anim.c` file
 - [x] ...maybe .yan should just be a json file, it would allow for backwards compatibility if .yan changes, and would be a lot easier to edit externally...
 - [ ] Put path to spritesheet and palette in json so it can be autoloaded
+- [ ] Make new project button actually create a new project (give confirmation if there is unsaved changes in current project)
+- [ ] Confirmation when closing window with unsaved changes
+- [ ] Autosave maybe
 
 ### Animation/timeline editing
 
